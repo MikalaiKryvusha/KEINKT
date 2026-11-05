@@ -41,14 +41,14 @@ is baked into the file too — no npm, nothing fetched at run time. Nothing you 
 | **KEINKT Calibrator** | Measures how your e-ink screen really shows grays, from one phone photo, and gives the reader a correction curve | in development |
 | **KEINKT Image Editor** | Crops and prepares pictures and sleep screens for the reader's screen | planned |
 
+### KEINKT Calibrator
+
 <p align="center">
   <img src="design/calibrator-res-en.webp" width="100%" alt="KEINKT Calibrator: the card found in the photo and straightened, the measured screen response with the correction curve, before and after ramps and the Download panel_curve.txt button">
 </p>
 <p align="center">
   <img src="design/calibrator-cond-en.webp" width="100%" alt="How to photograph the screen: frontlight off, light theme, daylight, no glare or shadows, no tilt — each as a do / don't drawing">
 </p>
-
-### KEINKT Calibrator
 
 Every e-ink panel shows grays its own way: one crushes the shadows, another washes out the light tones. A photo
 prepared on a computer looks different on the reader. The calibrator measures your panel and gives the reader a
@@ -126,14 +126,14 @@ MIT — see [LICENSE](LICENSE).
 | **KEINKT Calibrator** | Измеряет по одному фото, как ваш e-ink экран на самом деле показывает серые тона, и даёт читалке кривую поправки | в разработке |
 | **KEINKT Image Editor** | Кроп и подготовка картинок и заставок под экран читалки | в планах |
 
+### KEINKT Calibrator
+
 <p align="center">
   <img src="design/calibrator-res-ru.webp" width="100%" alt="KEINKT Calibrator: карточка найдена на фото и выпрямлена, измеренный отклик экрана с кривой поправки, полосы без и с поправкой, кнопка «Скачать panel_curve.txt»">
 </p>
 <p align="center">
   <img src="design/calibrator-cond-ru.webp" width="100%" alt="Как фотографировать экран: подсветка выключена, светлая тема, дневной свет, без бликов и теней, без наклона — каждое условие рисунком «так / не так»">
 </p>
-
-### KEINKT Calibrator
 
 Каждая e-ink панель показывает серое по-своему: одна темнит тени, другая сливает светлые тона. Фото, подготовленное на
 компьютере, на читалке выглядит иначе. Калибратор измеряет вашу панель и даёт читалке поправку, чтобы картинки и
