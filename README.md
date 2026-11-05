@@ -10,7 +10,7 @@
   <a href="#russian"><img src="https://img.shields.io/badge/Русский-C0392B?style=for-the-badge" alt="Русский"></a>
 </p>
 
-<p align="center"><b>K E-Ink Tools</b><br>
+<p align="center"><b>Krinik E-Ink Tools</b><br>
 Browser tools for e-ink readers: calibrate the screen's gray tones from a photo, prepare pictures for the panel</p>
 
 <p align="center">
@@ -91,7 +91,7 @@ MIT — see [LICENSE](LICENSE).
   <a href="#russian"><img src="https://img.shields.io/badge/Русский-C0392B?style=for-the-badge" alt="Русский"></a>
 </p>
 
-<p align="center"><b>K E-Ink Tools</b><br>
+<p align="center"><b>Krinik E-Ink Tools</b><br>
 Браузерные инструменты для e-ink читалок: калибровка серых тонов экрана по фото и подготовка картинок под экран</p>
 
 [Read in English →](#english)

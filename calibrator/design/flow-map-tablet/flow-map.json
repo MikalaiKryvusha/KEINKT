@@ -2,7 +2,7 @@
  "title": "KEINKT Calibrator — tablet 820 px",
  "project": "KEINKT",
  "subtitle": "Web tool: the card from Settings → Display → Screen calibration → a photo of the screen → the curve panel_curve.txt / panel_curve_book.txt. Tablet 820 px, shot from the page itself (calibrator/index.html).",
- "description": "K E-Ink Tools — browser tools for e-ink readers",
+ "description": "Krinik E-Ink Tools — browser tools for e-ink readers",
  "lang": "ru",
  "screen": {
   "width": 820,
