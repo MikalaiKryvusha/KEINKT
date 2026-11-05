@@ -13,7 +13,7 @@
 <p align="center"><b>Krinik E-Ink Tools</b><br>
 Browser tools for e-ink readers: calibrate the screen's gray tones from a photo, prepare pictures for the panel</p>
 
-<p align="center"><i>Dedicated to my mother, Sofia Fadeevna Kryvusha — a great reader and lover of books, who gave me my love of reading.</i></p>
+<p align="center"><i>❤️ Dedicated to my mother, Sofia Fadeevna Kryvusha — a great reader and lover of books, who gave me my love of reading.</i></p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
@@ -105,7 +105,7 @@ MIT — see [LICENSE](LICENSE).
 <p align="center"><b>Krinik E-Ink Tools</b><br>
 Браузерные инструменты для e-ink читалок: калибровка серых тонов экрана по фото и подготовка картинок под экран</p>
 
-<p align="center"><i>Проект посвящён моей маме — Кривуше Софии Фадеевне, очень большому читателю-книголюбу, которая привила мне любовь к чтению книг.</i></p>
+<p align="center"><i>❤️ Проект посвящён моей маме — Кривуше Софии Фадеевне, очень большому читателю-книголюбу, которая привила мне любовь к чтению книг.</i></p>
 
 [Read in English →](#english)
 
