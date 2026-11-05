@@ -223,10 +223,10 @@ details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8p
   </div>
   <div class="visual">
     <div class="drop" id="drop">
-      <p data-i18n="s3p">Перенесите фото с телефона на компьютер и перетащите его сюда — или выберите файл.</p>
+      <p data-i18n="s3p">Перенесите фото с телефона на компьютер и перетащите сюда — или выберите файлы. Можно несколько фото одного экрана: поправка считается по всем вместе, так точнее.</p>
       <div class="row">
         <label class="btn" for="photo" data-i18n="s3b">Выбрать фото</label>
-        <input id="photo" type="file" accept="image/*" hidden>
+        <input id="photo" type="file" accept="image/*" multiple hidden>
         <button class="btn secondary" type="button" id="demo" data-i18n="demo">Посмотреть на примере</button>
       </div>
       <p class="note" data-i18n="s3n">Фото с iPhone в формате HEIC открывается не во всех браузерах. Если не загрузилось: на iPhone Настройки → Камера → Форматы → «Наиболее совместимый», или откройте эту страницу в Safari.</p>
@@ -251,7 +251,8 @@ details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8p
         </div>
         <div class="row">
           <button class="btn" type="button" id="dl-curve" data-i18n="dlc">Скачать panel_curve.txt</button>
-          <button class="btn secondary" type="button" id="retry" data-i18n="retry">Другое фото</button>
+          <button class="btn secondary" type="button" id="retry" data-i18n="retry">Добавить фото</button>
+          <button class="btn secondary" type="button" id="reset" data-i18n="reset">Начать заново</button>
         </div>
       </div>
     </div>
@@ -266,7 +267,7 @@ details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8p
       <ol class="how">
         <li data-i18n="s4a">Положите файл в корень карты памяти — кабелем, по Wi-Fi через «Передачу файлов» или картридером: <span class="tag">panel_curve.txt</span> для картинок, <span class="tag">panel_curve_book.txt</span> для книг.</li>
         <li data-i18n="s4b">Калибровка экрана → включите галочку «Калибровка картинок» или «Калибровка книг».</li>
-        <li data-i18n="s4c">Усыпите читалку кнопкой питания и разбудите снова: поправка читается при пробуждении. Картинки перерисуются с ней сами.</li>
+        <li data-i18n="s4c">Поправка читается с карты в момент, когда ставите галочку. Если галочка уже стояла — снимите и поставьте снова. Картинки перерисуются с новой поправкой сами.</li>
       </ol>
       <p class="note" data-i18n="s4n">Вернуть как было: снимите галочку в «Калибровке экрана» или удалите файл из корня карты.</p>
     </div>
@@ -275,10 +276,10 @@ details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8p
     <div class="n">5</div>
     <div class="text">
       <h2 data-i18n="s5t">Проверьте результат</h2>
-      <p data-i18n="s5p">Когда галочка стоит, тот же калибровочный экран показывает карточку уже с вашей поправкой. Сфотографируйте её так же и загрузите — инструмент покажет, насколько ровно легли тона.</p>
+      <p data-i18n="s5p">Когда галочка стоит, тот же калибровочный экран показывает карточку уже с вашей поправкой. Сфотографируйте её так же и загрузите — инструмент покажет, насколько ровно легли тона, и уточнит поправку по этому фото. Если страницу открыли заново, загрузите вместе с фото и файл поправки, который сейчас лежит на карте.</p>
       <div class="row">
         <label class="btn secondary" for="photo-check" data-i18n="s5b">Загрузить фото проверки</label>
-        <input id="photo-check" type="file" accept="image/*" hidden>
+        <input id="photo-check" type="file" accept="image/*,.txt" multiple hidden>
       </div>
     </div>
   </section>
@@ -595,35 +596,75 @@ const Calib = (() => {
     return out;
   }
 
-  // seen[i] (0..1) for LEVELS[i] → table: wanted on-screen tone t → file value fed to the panel (what the reader reads).
-  function curveFrom(seen) {
-    // Normalised by the darkest and the lightest step themselves (no clamp first: a step measured «darker than the
-    // marks» — glare on a mark, a light gradient — keeps its place in the order).
-    const mono = isotonic(seen);
-    const lo = mono[0], hi = mono[mono.length - 1];
+  // One photo → points [file value fed to the panel, seen tone], both 0..1. `curve` is the table the card went through
+  // on the reader (a check photo, the correction on), null for a photo without it. Normalised by the photo's own
+  // darkest and lightest step (no clamp: a step measured «darker than the marks» — glare on a mark, a light gradient —
+  // keeps its place in the order).
+  function photoPoints(seen, curve) {
+    const mono = isotonic(seen), lo = mono[0], hi = mono[mono.length - 1];
     if (!(hi - lo > 0.25)) return null;
-    const resp = mono.map((v) => Math.min(1, Math.max(0, (v - lo) / (hi - lo))));
-    const pts = []; let last = -1;
-    resp.forEach((s, i) => { if (s > last + 1e-4) { pts.push([s, LEVELS[i] / 255]); last = s; } });
-    if (pts[pts.length - 1][0] < 1) pts.push([1, 1]);
-    const table = new Uint8Array(256);
-    for (let t = 0; t < 256; t++) {
-      const want = t / 255; let f = 1;
-      for (let k = 0; k < pts.length - 1; k++) {
-        const [s1, f1] = pts[k], [s2, f2] = pts[k + 1];
-        if (want <= s2) { f = s2 > s1 ? f1 + (f2 - f1) * (want - s1) / (s2 - s1) : f2; break; }
-      }
-      if (want <= pts[0][0]) f = pts[0][1];
-      table[t] = Math.round(255 * Math.min(1, Math.max(0, f)));
-    }
-    table[0] = 0; table[255] = 255;
-    for (let t = 1; t < 256; t++) if (table[t] < table[t - 1]) table[t] = table[t - 1];
-    return { table, resp };
+    return seen.map((v, i) => [(curve ? curve[LEVELS[i]] : LEVELS[i]) / 255, (v - lo) / (hi - lo)]);
   }
-  // Panel response at any file value, interpolated from the measured points.
+
+  // Panel response on a 65-step grid from the points of all photos together: monotone, lightly smoothed. SMOOTH (about
+  // 5 of 255) takes out the shot-to-shot noise and keeps the panel's own steep steps — e-ink panels are not ideal, and
+  // a wider kernel smears real jumps (X4 Pro, 05.11.2026, four photos: a held-out photo predicted within 2.3 p.p. at
+  // 0.01–0.02, 2.8 p.p. at 0.05).
+  const GRID = 64, SMOOTH = 0.02;
+  function responseFrom(points) {
+    const s = [...points].sort((a, b) => a[0] - b[0]), iso = isotonic(s.map((p) => p[1]));
+    let r = [];
+    for (let g = 0; g <= GRID; g++) {
+      const x = g / GRID; let sw = 0, sy = 0, near = 0;
+      s.forEach((p, i) => {
+        const w = Math.exp(-((p[0] - x) ** 2) / (2 * SMOOTH * SMOOTH)); sw += w; sy += w * iso[i];
+        if (Math.abs(p[0] - x) < Math.abs(s[near][0] - x)) near = i;
+      });
+      r.push(sw > 1e-12 ? sy / sw : iso[near]);
+    }
+    r = isotonic(r);
+    const r0 = r[0], r1 = r[GRID];
+    if (!(r1 - r0 > 0.25)) return null;
+    r = r.map((v) => (v - r0) / (r1 - r0));
+    for (let g = 1; g <= GRID; g++) r[g] = Math.max(r[g], r[g - 1] + 1e-3);
+    const top = r[GRID];
+    return r.map((v) => v / top);
+  }
+  // Panel response at any file value f (0..1), interpolated on the grid.
   function respAt(resp, f) {
-    const x = f * 32; const i = Math.min(31, Math.floor(x)), t = x - i;
+    const n = resp.length - 1, x = Math.min(n, Math.max(0, f * n)), i = Math.min(n - 1, Math.floor(x)), t = x - i;
     return resp[i] * (1 - t) + resp[i + 1] * t;
+  }
+  // Response → table: wanted on-screen tone t → file value fed to the panel (what the reader reads).
+  function tableFrom(resp) {
+    const table = new Uint8Array(256);
+    for (let t = 1; t < 255; t++) {
+      let a = 0, b = 1;
+      for (let k = 0; k < 30; k++) { const m = (a + b) / 2; if (respAt(resp, m) < t / 255) a = m; else b = m; }
+      table[t] = Math.round(255 * b);
+    }
+    table[255] = 255;
+    for (let t = 1; t < 256; t++) if (table[t] < table[t - 1]) table[t] = table[t - 1];
+    return table;
+  }
+  // Photos of one card kind, [{ seen, curve }] → { table, resp, n }; null when no photo has rising steps. Several photos
+  // average out the shot-to-shot spread (2–3 p.p.); a check photo adds its points where the curve sent the panel —
+  // that is the second iteration.
+  function curveFromPhotos(photos) {
+    const pts = [];
+    for (const p of photos) { const q = photoPoints(p.seen, p.curve); if (q) pts.push(...q); }
+    if (!pts.length) return null;
+    const resp = responseFrom(pts);
+    return resp ? { table: tableFrom(resp), resp, n: photos.length } : null;
+  }
+  function curveFrom(seen) { return curveFromPhotos([{ seen, curve: null }]); }
+  // A check photo (the card shown through the correction): mean and largest distance of its steps from the straight
+  // line, in the curve's own normalisation. The raw ratio to the marks overstated it — 26 p.p. on a good calibration.
+  function checkDeviation(seen) {
+    const q = photoPoints(seen, null);
+    if (!q) return { mean: 1, max: 1 };
+    const d = q.map(([x, y]) => Math.abs(y - x));
+    return { mean: d.reduce((a, b) => a + b, 0) / d.length, max: Math.max(...d) };
   }
 
   // Forgiving search (people shoot crooked): marks from several threshold windows, merged; every convex four of them,
@@ -710,7 +751,7 @@ const Calib = (() => {
     return { ok: true, kind, quad: loc.dst, Hm: loc.Hm, rho: loc.rho, seen, ...curve, issues, white, black };
   }
 
-  return { W, H, F, HOLE, FID, CELLS, CELL, LEVELS, renderCard, bmp, fiducialCandidates, pickFour, orderQuad, homography, apply, sample, analyze, curveFrom, respAt, isotonic };
+  return { W, H, F, HOLE, FID, CELLS, CELL, LEVELS, renderCard, bmp, fiducialCandidates, pickFour, orderQuad, homography, apply, sample, analyze, curveFrom, curveFromPhotos, checkDeviation, photoPoints, tableFrom, respAt, isotonic };
 })();
 if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
 // ===== CORE-END =====
@@ -737,7 +778,7 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
       s2t: 'Photograph the screen',
       s2p: 'Accuracy depends on the photo. This is how the curve tested on a real reader was shot. Use a camera or a phone in its ordinary mode, without flash, night mode or filters; keep the whole card in the frame and as large as possible.',
       s3t: 'Upload the photo here',
-      s3p: 'Move the photo from the phone to this computer and drop it here — or choose a file.',
+      s3p: 'Move the photos from the phone to this computer and drop them here — or choose files. Several photos of one screen are fine: the correction is worked out from all of them together, which is more accurate.',
       s3b: 'Choose photo', demo: 'Try with an example photo',
       s3n: 'iPhone HEIC photos do not open in every browser. If it does not load: on the iPhone Settings → Camera → Formats → Most Compatible, or open this page in Safari.',
       manp: 'The marks were not found automatically. Click the center of each of the four black corner marks in the photo — in any order.',
@@ -745,14 +786,14 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
       cap1: 'What the tool found: the card straightened, frames show where it measured',
       cap2: 'Dots — your screen without correction; line — the correction the reader gets; dashed — ideal',
       bars: 'A smooth black-to-white ramp on your screen (estimated from the measurement):', before: 'without correction', after: 'with correction',
-      dlc: 'Download panel_curve.txt', retry: 'Another photo',
+      dlc: 'Download panel_curve.txt', retry: 'Add a photo', reset: 'Start over',
       s4t: 'Install the correction',
       s4a: 'Put the file into the root of the memory card — by cable, over Wi-Fi with File Transfer or with a card reader: <span class="tag">panel_curve.txt</span> for pictures, <span class="tag">panel_curve_book.txt</span> for books.',
       s4b: 'Screen calibration → turn on Pictures calibration or Books calibration.',
-      s4c: 'Put the reader to sleep with the power button and wake it again: the correction is read on wake. Pictures are redrawn with it by themselves.',
+      s4c: 'The correction is read from the card the moment you tick the checkbox. If it was already ticked, untick it and tick it again. Pictures are redrawn with the new correction by themselves.',
       s4n: 'To undo: turn the checkbox off in Screen calibration, or delete the file from the card root.',
       s5t: 'Check the result',
-      s5p: 'With the checkbox on, the same calibration screen shows the card with your correction. Photograph it the same way and upload it — the tool shows how evenly the tones fall.',
+      s5p: 'With the checkbox on, the same calibration screen shows the card with your correction. Photograph it the same way and upload it — the tool shows how evenly the tones fall and refines the correction from this photo. If you opened the page anew, upload the correction file that is on the card now together with the photo.',
       s5b: 'Upload the check photo',
       h0: 'If something went wrong',
       h1: '<b>The marks are not found.</b> Shoot closer and straighter, with all four corner marks in the frame and out of any glare. If that still fails, the tool offers to mark them by hand.',
@@ -775,10 +816,13 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
         lowlight: 'Света маловато — тёмные ступени измерены грубо.',
         noisy: 'Несколько ступеней выбиваются из ряда — их сгладило. Если результат не понравится, переснимите.',
         guessed: 'Одна угловая метка не видна (блик, рамка или палец) — её место достроено по трём остальным.',
-        good: 'Можно скачивать {f}', checkGood: 'Проверка: тона легли ровно, отклонение до {d} %',
-        checkBad: 'Проверка: отклонение до {d} %. Если глазом видно, откалибруйте заново',
+        good: 'Можно скачивать {f}', frames: 'Поправка посчитана по {n} фото', checkGood: 'Проверка: тона легли ровно — в среднем {d} %, в худшем месте {x} %',
+        checkBad: 'Проверка: в среднем {d} %, в худшем месте {x} % — поправку стоит уточнить',
+        refined: 'Поправка уточнена по проверочному фото — скачайте {f} и замените файл на карте',
+        needCurve: 'Чтобы уточнить поправку по этому фото, загрузите вместе с ним файл {f}, который сейчас на карте',
+        curveLoaded: 'Файл поправки с карты загружен: {f}', curveBad: 'Это не файл поправки: нужно 256 чисел от 0 до 255',
         load: 'Не удалось открыть фото. Если это HEIC с iPhone — см. подсказку выше.',
-        points: 'Отмечено точек: {n} из 4', checkMode: 'Это проверочная карточка — файл поправки не нужен',
+        points: 'Отмечено точек: {n} из 4', checkMode: 'Это проверочное фото: поправка на карте учтена',
       },
       en: {
         found: 'The {k} card found, all 33 steps measured', manualFound: 'The {k} card found from your points', kpictures: 'pictures', kbooks: 'books',
@@ -794,10 +838,13 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
         lowlight: 'A bit too little light — dark steps are measured roughly.',
         noisy: 'A few steps stand out of line and were smoothed. If you do not like the result, shoot again.',
         guessed: 'One corner mark is hidden (glare, the bezel or a finger) — its place was worked out from the other three.',
-        good: 'Ready to download {f}', checkGood: 'Check: tones fall evenly, deviation up to {d} %',
-        checkBad: 'Check: deviation up to {d} %. If you can see it, calibrate again',
+        good: 'Ready to download {f}', frames: 'Correction worked out from {n} photos', checkGood: 'Check: tones fall evenly — {d} % on average, {x} % at the worst spot',
+        checkBad: 'Check: {d} % on average, {x} % at the worst spot — the correction is worth refining',
+        refined: 'Correction refined from the check photo — download {f} and replace the file on the card',
+        needCurve: 'To refine the correction from this photo, upload the file {f} that is on the card now together with it',
+        curveLoaded: 'Correction file from the card loaded: {f}', curveBad: 'This is not a correction file: it needs 256 numbers from 0 to 255',
         load: 'Could not open the photo. If it is an iPhone HEIC, see the hint above.',
-        points: 'Points marked: {n} of 4', checkMode: 'This is the check card — no correction file needed',
+        points: 'Points marked: {n} of 4', checkMode: 'This is a check photo: the correction on the card is taken into account',
       },
     },
   };
@@ -866,38 +913,79 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
     setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
   }
 
-  // ---- photo ----
+  // ---- photos ----
+  // Every measured photo of a card kind stays in `series` and the correction is worked out from all of them together.
+  // A check photo (taken with the correction on) joins with the table it went through — the one on the card, known from
+  // a download on this page or from the file the user uploads (`onCard`). Several photos average the shot-to-shot spread.
   let photo = null, last = null, manualPts = [], checkMode = false;
-  async function loadFile(file, check = false) {
-    if (!file) return;
-    checkMode = check || /check/i.test(file.name || '');
-    try {
-      const bmpImg = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => null);
-      const src = bmpImg || await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); });
-      const sw = src.width, sh = src.height, k = Math.min(1, 1600 / Math.max(sw, sh));
-      const cw = Math.round(sw * k), ch = Math.round(sh * k);
-      const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
-      const cx = cv.getContext('2d'); cx.drawImage(src, 0, 0, cw, ch);
-      const data = cx.getImageData(0, 0, cw, ch).data, d = new Float32Array(cw * ch);
-      for (let i = 0; i < cw * ch; i++) d[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
-      photo = { w: cw, h: ch, d, canvas: cv };
-      manualPts = [];
-      run(null);
-    } catch (e) {
-      showError('load');
-    }
+  const series = { pictures: [], books: [] }, onCard = { pictures: null, books: null };
+  const fileOf = (kind) => (kind === 'books' ? 'panel_curve_book.txt' : 'panel_curve.txt');
+  function parseCurve(text) {
+    const n = (text.match(/\d+/g) || []).map(Number);
+    const rising = n.every((v, i) => !i || v >= n[i - 1]);
+    return n.length === 256 && n.every((v) => v <= 255) && rising && n[255] - n[0] >= 64 ? Uint8Array.from(n) : null;
   }
-  $('photo').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
-  $('photo-check').addEventListener('change', (e) => { loadFile(e.target.files[0], true); e.target.value = ''; $('s3').scrollIntoView(); });
+  async function decode(file) {
+    const bmpImg = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => null);
+    const src = bmpImg || await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); });
+    const sw = src.width, sh = src.height, k = Math.min(1, 1600 / Math.max(sw, sh));
+    const cw = Math.round(sw * k), ch = Math.round(sh * k);
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    const cx = cv.getContext('2d'); cx.drawImage(src, 0, 0, cw, ch);
+    const data = cx.getImageData(0, 0, cw, ch).data, d = new Float32Array(cw * ch);
+    for (let i = 0; i < cw * ch; i++) d[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+    return { w: cw, h: ch, d, canvas: cv };
+  }
+  // Files from the picker or a drop: correction files first (a check photo needs them), then the photos one by one.
+  async function loadFiles(list, check = false) {
+    const files = Array.from(list || []);
+    const curves = files.filter((f) => /\.txt$/i.test(f.name || '')), photos = files.filter((f) => !/\.txt$/i.test(f.name || ''));
+    const notes = [], batchKinds = new Set();
+    for (const f of curves) {
+      const t = parseCurve(await f.text());
+      if (!t) { notes.push(['bad', m('curveBad')]); continue; }
+      const kind = /book/i.test(f.name) ? 'books' : 'pictures';
+      onCard[kind] = t; batchKinds.add(kind); notes.push(['ok', m('curveLoaded', { f: fileOf(kind) })]);
+    }
+    for (const [i, f] of photos.entries()) {
+      checkMode = check || /check/i.test(f.name || '');
+      try { photo = await decode(f); } catch (e) { notes.push(['bad', `${f.name}: ${m('load')}`]); if (i === photos.length - 1) showError('load'); continue; }
+      photo.key = `${f.name}|${f.size}|${f.lastModified}`; manualPts = [];
+      run(null, notes, false, batchKinds);
+      // A failed photo in a batch stays named in the list; the last one keeps the full view (and manual marks).
+      if (!last.ok && i < photos.length - 1) notes.push(['bad', `${f.name}: ${m(last.reason)}`]);
+    }
+    if (!photos.length && notes.length && last && last.ok) run(last.quadUsed || null, notes, true);
+    else if (!photos.length && notes.length) { $('result').hidden = false; $('status').innerHTML = notes.map(([c, t]) => `<li class="${c}">${t}</li>`).join(''); }
+  }
+  $('photo').addEventListener('change', (e) => { loadFiles(e.target.files); e.target.value = ''; });
+  $('photo-check').addEventListener('change', (e) => { loadFiles(e.target.files, true); e.target.value = ''; $('s3').scrollIntoView(); });
   const drop = $('drop');
   drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
   drop.addEventListener('dragleave', () => drop.classList.remove('over'));
-  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); loadFile(e.dataTransfer.files[0]); });
-  $('retry').addEventListener('click', () => $('photo').click());
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); loadFiles(e.dataTransfer.files); });
+  $('retry').addEventListener('click', () => $(last && last.check ? 'photo-check' : 'photo').click());
+  $('reset').addEventListener('click', () => {
+    series.pictures = []; series.books = []; onCard.pictures = null; onCard.books = null;
+    last = null; photo = null; $('result').hidden = true; $('manual').hidden = true;
+  });
 
-  function run(quad) {
-    const r = Calib.analyze(photo, quad);
-    r.manual = !!quad; r.check = checkMode;
+  // Measure the current photo (quad: marks given by hand), put it into its kind's series and work out the correction.
+  // batchKinds: kinds whose correction file came in the same drop — a photo of such a card was taken with it on.
+  function run(quad, notes = [], again = false, batchKinds = new Set()) {
+    const r = again ? last : Calib.analyze(photo, quad);
+    if (!again) { r.manual = !!quad; r.check = checkMode || (r.ok && batchKinds.has(r.kind)); r.quadUsed = quad; }
+    r.notes = notes;
+    if (r.ok) {
+      const list = series[r.kind], curve = r.check ? onCard[r.kind] : null;
+      const at = list.findIndex((e) => e.photo === photo || (photo.key && e.photo.key === photo.key));
+      if (at >= 0) list.splice(at, 1);
+      if (!r.check || curve) list.push({ photo, seen: r.seen, curve });
+      const pooled = list.length ? Calib.curveFromPhotos(list) : null;
+      r.table = pooled && (!r.check || curve) ? pooled.table : null;
+      r.resp = pooled ? pooled.resp : null;
+      r.n = list.length;
+    }
     last = r;
     showResult(r);
   }
@@ -908,7 +996,7 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
 
   function showResult(r) {
     $('result').hidden = false;
-    const st = [];
+    const st = [...(r.notes || [])];
     if (!r.ok) {
       st.push(['bad', m(r.reason)]);
       $('status').innerHTML = st.map(([c, t]) => `<li class="${c}">${t}</li>`).join('');
@@ -917,20 +1005,23 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
       return;
     }
     $('manual').hidden = !r.manual;
-    const file = r.kind === 'books' ? 'panel_curve_book.txt' : 'panel_curve.txt';
+    const file = fileOf(r.kind);
     st.push(['ok', m(r.manual ? 'manualFound' : 'found', { k: m('k' + r.kind) })]);
     for (const k of r.issues) st.push([k === 'bright' ? 'bad' : 'warn', m(k)]);
-    let dev = 0;
     if (r.check) {
-      r.seen.forEach((s, i) => { dev = Math.max(dev, Math.abs(s - Calib.LEVELS[i] / 255)); });
-      dev = Math.round(dev * 100);
-      st.push([dev <= 8 ? 'ok' : 'warn', m(dev <= 8 ? 'checkGood' : 'checkBad', { d: dev })]);
+      const dev = Calib.checkDeviation(r.seen), d = Math.round(dev.mean * 100), x = Math.round(dev.max * 100);
+      const good = dev.mean <= 0.04 && dev.max <= 0.1;
+      st.push([good ? 'ok' : 'warn', m(good ? 'checkGood' : 'checkBad', { d, x })]);
       st.push(['ok', m('checkMode')]);
-    } else st.push([r.issues.includes('bright') ? 'warn' : 'ok', m('good', { f: file })]);
+      st.push(r.table ? ['ok', m('refined', { f: file })] : ['warn', m('needCurve', { f: file })]);
+    } else {
+      if (r.n > 1) st.push(['ok', m('frames', { n: r.n })]);
+      st.push([r.issues.includes('bright') ? 'warn' : 'ok', m('good', { f: file })]);
+    }
     $('dl-curve').textContent = (lang === 'ru' ? 'Скачать ' : 'Download ') + file;
     $('status').innerHTML = st.map(([c, t]) => `<li class="${c}">${t}</li>`).join('');
     document.querySelectorAll('#result .panel, #bars').forEach((el) => { el.hidden = false; });
-    $('dl-curve').hidden = r.check;
+    $('dl-curve').hidden = !r.table;
     drawFound(r); drawChart(r); drawBars(r);
   }
 
@@ -955,7 +1046,7 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
       g += `<text x="${X(v)}" y="${320 - P + 16}" text-anchor="middle" font-size="11" fill="var(--muted)">${k * 25}</text>`;
     }
     g += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}" stroke="var(--muted)" stroke-dasharray="4 4"/>`;
-    if (!r.check) {
+    if (r.table) {
       let d = ''; for (let t = 0; t < 256; t += 3) d += `${t ? 'L' : 'M'}${X(t / 255).toFixed(1)} ${Y(r.table[t] / 255).toFixed(1)}`;
       d += `L${X(1)} ${Y(r.table[255] / 255)}`;
       g += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
@@ -971,7 +1062,7 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
     for (const [id, after] of [['bar-before', false], ['bar-after', true]]) {
       const c = $(id), x = c.getContext('2d'), w = c.width;
       for (let i = 0; i < w; i++) {
-        const want = i / (w - 1), f = after && !r.check ? r.table[Math.round(want * 255)] / 255 : want;
+        const want = i / (w - 1), f = after && r.table ? r.table[Math.round(want * 255)] / 255 : want;
         const v = Math.round(255 * Math.min(1, Math.max(0, Calib.respAt(resp, f))));
         x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(i, 0, 1, c.height);
       }
@@ -979,10 +1070,11 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
   }
 
   $('dl-curve').addEventListener('click', () => {
-    if (!last || !last.ok) return;
+    if (!last || !last.ok || !last.table) return;
     const t = Array.from(last.table), lines = [];
     for (let i = 0; i < 256; i += 16) lines.push(t.slice(i, i + 16).join(' '));
-    save(new TextEncoder().encode(lines.join('\n') + '\n'), last.kind === 'books' ? 'panel_curve_book.txt' : 'panel_curve.txt', 'text/plain');
+    save(new TextEncoder().encode(lines.join('\n') + '\n'), fileOf(last.kind), 'text/plain');
+    onCard[last.kind] = Uint8Array.from(t); // what goes to the card now; a later check photo is read through it
   });
 
   // ---- manual marks ----
@@ -1033,10 +1125,17 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
     return { w, h, d, canvas: cv };
   }
   function demo(kind) {
-    photo = examplePhoto(kind === 'check' ? 'ok' : kind); manualPts = []; checkMode = kind === 'check';
+    series.pictures = []; series.books = []; onCard.pictures = null; onCard.books = null;
+    photo = examplePhoto(kind === 'check' ? 'ok' : kind); manualPts = []; checkMode = false;
     if (kind === 'manual') { last = { ok: false, reason: 'marks' }; showResult(last); $('s3').scrollIntoView(); return; }
     run(null);
-    if (kind === 'check' && last.ok) { last.seen = last.seen.map((_, i) => panelShow(last.table[Calib.LEVELS[i]] / 255)); showResult(last); }
+    if (kind === 'check' && last.ok) {
+      // The example check: the example screen shown through the correction just made, as if it were on the card.
+      const t = last.table;
+      onCard[last.kind] = t; series[last.kind] = []; checkMode = true; last.check = true;
+      last.seen = last.seen.map((_, i) => panelShow(t[Calib.LEVELS[i]] / 255));
+      run(null, [], true);
+    }
     $('s3').scrollIntoView();
   }
   $('demo').addEventListener('click', () => demo('ok'));

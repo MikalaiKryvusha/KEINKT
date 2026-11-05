@@ -25,10 +25,18 @@ const panel = (f) => { // f 0..1 → seen 0..1
 function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32); }
 
 // Render the card as the panel shows it, then photograph it: card → photo homography, bezel, light gradient, noise, blur.
-function photo({ kind = 'pictures', w = 1400, h = 1100, corners, light = [1, 0, 0], black = 28, white = 228, noise = 3, seed = 1, invert = false }) {
+function photo({ kind = 'pictures', w = 1400, h = 1100, corners, light = [1, 0, 0], black = 28, white = 228, noise = 3, seed = 1, invert = false, curve = null, patchNoise = 0 }) {
   const card = C.renderCard(kind);
   const shown = new Float32Array(card.length);
-  for (let i = 0; i < card.length; i++) shown[i] = panel(card[i] / 255);
+  for (let i = 0; i < card.length; i++) shown[i] = panel((curve ? curve[card[i]] : card[i]) / 255); // curve: the reader's correction on
+  // Shot-to-shot spread of real photos (2–3 p.p.): every cell of this shot reads a little off, its own way.
+  if (patchNoise) {
+    const rr = rng(seed * 31 + 7);
+    for (const c of C.CELLS) {
+      const o = (rr() - 0.5) * 2 * patchNoise;
+      for (let y = c.y; y < c.y + C.CELL; y++) for (let x = c.x; x < c.x + C.CELL; x++) shown[y * C.W + x] = Math.min(1, Math.max(0, shown[y * C.W + x] + o));
+    }
+  }
   const Hm = C.homography(corners, C.FID.map((p, k) => [[0, 0], [C.W, 0], [C.W, C.H], [0, C.H]][k])); // unused
   const toCard = C.homography(corners.map((p) => p), C.FID); // photo → card, through the four mark centres
   const r = rng(seed), d = new Float32Array(w * h);
@@ -115,6 +123,45 @@ for (const cs of cases) {
   const ok = b.length === 54 + C.W * 3 * C.H && b[0] === 0x42 && b[1] === 0x4d;
   if (!ok) fail++;
   console.log(`${ok ? '✓' : '✕'} card BMP ${b.length} bytes`);
+}
+// Error of a table against the true inverse, away from the flat ends of the panel.
+function tableErr(table) {
+  let m = 0;
+  for (let t = 8; t < 248; t++) m = Math.max(m, Math.abs(table[t] / 255 - trueInverse(t / 255)));
+  return m;
+}
+// Shown through a table: how far the screen is from the straight line (what a perfect check photo would show).
+function shownErr(table) {
+  let s = 0;
+  for (let t = 0; t < 256; t++) s += Math.abs((panel(table[t] / 255) - lo) / (hi - lo) - t / 255);
+  return s / 256;
+}
+// Several photos are averaged: together they beat the worst single shot.
+{
+  const shots = [1, 2, 3, 4].map((seed) => C.analyze(photo({ ...cases[0], patchNoise: 0.05, seed }), null));
+  const one = Math.max(...shots.map((r) => shownErr(r.table))), all = C.curveFromPhotos(shots.map((r) => ({ seen: r.seen, curve: null })));
+  const ok = shots.every((r) => r.ok) && all.n === 4 && shownErr(all.table) < one;
+  if (!ok) fail++;
+  console.log(`${ok ? '✓' : '✕'} four photos: mean screen error ${(shownErr(all.table) * 100).toFixed(1)} % (worst single photo ${(one * 100).toFixed(1)} %)`);
+}
+// Second iteration: a check photo taken through the first curve adds its points; the screen gets closer to the line.
+{
+  const first = C.analyze(photo({ ...cases[3], patchNoise: 0.05, seed: 3 }), null);
+  const check = C.analyze(photo({ ...cases[0], curve: first.table, patchNoise: 0.05, seed: 5 }), null);
+  const second = C.curveFromPhotos([{ seen: first.seen, curve: null }, { seen: check.seen, curve: first.table }]);
+  const e1 = shownErr(first.table), e2 = shownErr(second.table);
+  const ok = check.ok && e2 < e1;
+  if (!ok) fail++;
+  console.log(`${ok ? '✓' : '✕'} second iteration: mean screen error ${(e1 * 100).toFixed(1)} % → ${(e2 * 100).toFixed(1)} %`);
+}
+// Check deviation is measured in the curve's own normalisation: a good correction reads as a small deviation.
+{
+  const first = C.analyze(photo(cases[0]), null);
+  const check = C.analyze(photo({ ...cases[1], curve: first.table, seed: 7 }), null);
+  const d = C.checkDeviation(check.seen);
+  const ok = check.ok && d.mean < 0.03 && d.max < 0.08;
+  if (!ok) fail++;
+  console.log(`${ok ? '✓' : '✕'} check deviation: mean ${(d.mean * 100).toFixed(1)} %, max ${(d.max * 100).toFixed(1)} %`);
 }
 console.log(fail ? `${fail} FAILED` : 'all passed');
 process.exit(fail ? 1 : 0);

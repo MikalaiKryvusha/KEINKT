@@ -38,10 +38,13 @@ is baked into the file too — no npm, nothing fetched at run time. Nothing you 
 
 | Tool | What it does | State |
 |---|---|---|
-| **KEINKT Calibrator** | Measures how your e-ink screen really shows grays, from one phone photo, and gives the reader a correction curve | in development |
+| **KEINKT Calibrator** | Measures how your e-ink screen really shows grays, from phone photos, and gives the reader a correction curve | **1.0.0** — [open](https://mikalaikryvusha.github.io/KEINKT/calibrator/) |
 | **KEINKT Image Editor** | Crops and prepares pictures and sleep screens for the reader's screen | planned |
 
 ### KEINKT Calibrator
+
+**Open it in the browser: [https://mikalaikryvusha.github.io/KEINKT/calibrator/](https://mikalaikryvusha.github.io/KEINKT/calibrator/)** — or download `KEINKT-Calibrator-1.0.0.html` from [Releases](../../releases) and
+open it offline.
 
 <p align="center">
   <img src="design/calibrator-res-en.webp" width="100%" alt="KEINKT Calibrator: the card found in the photo and straightened, the measured screen response with the correction curve, before and after ramps and the Download panel_curve.txt button">
@@ -58,12 +61,22 @@ correction, so pictures and sleep images look the way they do on a computer.
    draws a card of 33 gray steps and four corner marks.
 2. Photograph the screen: frontlight off, light theme, daylight, no glare or shadows, camera level and the reader
    parallel to it. The page shows each condition as a do / don't drawing.
-3. Drop the photo into the page. It finds the marks, straightens the perspective, works out the rotation, evens out
-   the light against the paper and the black marks, measures the 33 steps and computes the curve.
+3. Drop the photo into the page — or several photos of the same screen: they are measured together, which averages
+   out the shot-to-shot spread. The page finds the marks, straightens the perspective, works out the rotation, evens
+   out the light against the paper and the black marks, measures the 33 steps and computes the curve.
 4. Download `panel_curve.txt` (or `panel_curve_book.txt` for images in books), put it into the root of the memory card,
-   turn the checkbox on in **Screen calibration**, put the reader to sleep and wake it.
-5. Optional: open the same calibration screen again — now with the correction — photograph it, and the page shows how
-   evenly the tones fall.
+   and tick the checkbox in **Screen calibration**: the curve is read from the card that moment (if it was ticked,
+   untick and tick it again).
+5. Optional, the second iteration: open the same calibration screen again — now with the correction — photograph it,
+   and the page shows how evenly the tones fall and refines the curve from this photo. On a fresh page drop the curve
+   file from the card together with the photo.
+
+On a real X4 Pro (05.11.2026) the screen went from 17.6 to 2.2–2.5 gray points off the straight line on average for
+pictures and from 9.1 to 1.1–2.7 for books after two iterations — about the spread between two photos of the same screen.
+
+<p align="center">
+  <img src="design/accuracy-x4pro-en.png" width="100%" alt="X4 Pro screen response without the curve, with the first curve and with the refined curve under two lights, pictures and books">
+</p>
 
 If the marks are not found automatically, you click them by hand; night mode, glare, tilt and overexposure are told
 apart and explained. The page speaks English and Russian (more languages are coming).
@@ -80,7 +93,8 @@ opens as is. It replaces the command-line scripts used so far.
 
 - `calibrator/index.html` — the tool itself; the analysis core sits between `CORE-BEGIN` and `CORE-END`.
 - `node calibrator/test.mjs` — the core on synthetic photos with a known panel response: straight, rotated, upside down
-  with perspective, tilted with uneven light, small in the frame, night mode, manual marks, both card kinds.
+  with perspective, tilted with uneven light, small in the frame, night mode, manual marks, both card kinds, several
+  photos with shot-to-shot spread, the second iteration from a check photo, the check deviation.
 - `calibrator/design/flow-map.html` — screens and flows of the tool, laid out with
   [KUIPS](https://github.com/MikalaiKryvusha/KUIPS) from the page itself.
 
@@ -123,10 +137,13 @@ MIT — see [LICENSE](LICENSE).
 
 | Инструмент | Что делает | Состояние |
 |---|---|---|
-| **KEINKT Calibrator** | Измеряет по одному фото, как ваш e-ink экран на самом деле показывает серые тона, и даёт читалке кривую поправки | в разработке |
+| **KEINKT Calibrator** | Измеряет по фото, как ваш e-ink экран на самом деле показывает серые тона, и даёт читалке кривую поправки | **1.0.0** — [открыть](https://mikalaikryvusha.github.io/KEINKT/calibrator/) |
 | **KEINKT Image Editor** | Кроп и подготовка картинок и заставок под экран читалки | в планах |
 
 ### KEINKT Calibrator
+
+**Открыть в браузере: [https://mikalaikryvusha.github.io/KEINKT/calibrator/](https://mikalaikryvusha.github.io/KEINKT/calibrator/)** — или скачайте `KEINKT-Calibrator-1.0.0.html` со страницы [Releases](../../releases) и
+открывайте без интернета.
 
 <p align="center">
   <img src="design/calibrator-res-ru.webp" width="100%" alt="KEINKT Calibrator: карточка найдена на фото и выпрямлена, измеренный отклик экрана с кривой поправки, полосы без и с поправкой, кнопка «Скачать panel_curve.txt»">
@@ -143,12 +160,22 @@ MIT — see [LICENSE](LICENSE).
    карточку из 33 серых ступеней и четырёх угловых меток.
 2. Сфотографируйте экран: подсветка выключена, светлая тема, дневной свет, без бликов и теней, камера ровно, читалка
    параллельно ей. Каждое условие страница показывает рисунком «так / не так».
-3. Перетащите фото на страницу. Она найдёт метки, выпрямит перспективу, определит поворот, выровняет свет по бумаге и
-   чёрным меткам, измерит 33 ступени и рассчитает кривую.
+3. Перетащите фото на страницу — или несколько фото одного экрана: они считаются вместе, и разброс между снимками
+   усредняется. Страница найдёт метки, выпрямит перспективу, определит поворот, выровняет свет по бумаге и чёрным
+   меткам, измерит 33 ступени и рассчитает кривую.
 4. Скачайте `panel_curve.txt` (или `panel_curve_book.txt` для картинок в книгах), положите в корень карты памяти,
-   включите галочку в **Калибровке экрана**, усыпите и разбудите читалку.
-5. По желанию: откройте тот же калибровочный экран — уже с поправкой — сфотографируйте, и страница покажет, насколько
-   ровно легли тона.
+   и поставьте галочку в **Калибровке экрана**: кривая читается с карты в этот момент (если галочка стояла — снимите
+   и поставьте снова).
+5. По желанию, вторая итерация: откройте тот же калибровочный экран — уже с поправкой — сфотографируйте, и страница
+   покажет, насколько ровно легли тона, и уточнит кривую по этому фото. На заново открытой странице перетащите вместе
+   с фото файл кривой с карты.
+
+На настоящей X4 Pro (05.11.2026) после двух итераций экран отходит от прямой в среднем на 2,2–2,5 пункта серого вместо
+17,6 на картинках и на 1,1–2,7 вместо 9,1 на книгах — это и есть разброс между двумя фото одного экрана.
+
+<p align="center">
+  <img src="design/accuracy-x4pro-ru.png" width="100%" alt="Отклик экрана X4 Pro без кривой, с первой и с уточнённой кривой при двух освещениях, картинки и книги">
+</p>
 
 Если метки не нашлись сами, их можно указать вручную; ночной режим, блик, наклон и пересвет распознаются и объясняются.
 Страница говорит по-английски и по-русски (другие языки — следом).
@@ -165,7 +192,8 @@ MIT — see [LICENSE](LICENSE).
 
 - `calibrator/index.html` — сам инструмент; ядро анализа — между `CORE-BEGIN` и `CORE-END`.
 - `node calibrator/test.mjs` — ядро на синтетических фото с известной кривой панели: прямо, боком, вверх ногами с
-  перспективой, под наклоном с неровным светом, мелко в кадре, ночной режим, ручные метки, оба вида карточки.
+  перспективой, под наклоном с неровным светом, мелко в кадре, ночной режим, ручные метки, оба вида карточки, несколько
+  фото с разбросом между снимками, вторая итерация по проверочному фото, отклонение проверки.
 - `calibrator/design/flow-map.html` — экраны и переходы инструмента, разложенные [KUIPS](https://github.com/MikalaiKryvusha/KUIPS)
   по самой странице.
 
