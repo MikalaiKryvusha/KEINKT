@@ -64,7 +64,9 @@ correction, so pictures and sleep images look the way they do on a computer.
 3. Drop the photo into the page — or several photos of the same screen: they are measured together, which averages
    out the shot-to-shot spread. The page finds the marks, straightens the perspective, works out the rotation, evens
    out the light against the paper and the black marks, measures the 33 steps and computes the curve.
-4. Download `panel_curve.txt` (or `panel_curve_book.txt` for images in books), put it into the root of the memory card,
+4. Download `panel_curve.txt` (or `panel_curve_book.txt` for images in books), put it into the hidden `/.crosspoint/`
+   folder on the memory card (on a Mac, `⌘⇧.` shows hidden files; for Wi-Fi transfer, enable **Show Hidden Files** in
+   the firmware settings),
    and tick the checkbox in **Screen calibration**: the curve is read from the card that moment (if it was ticked,
    untick and tick it again).
 5. Optional, the second iteration: open the same calibration screen again — now with the correction — photograph it,
@@ -163,7 +165,9 @@ MIT — see [LICENSE](LICENSE).
 3. Перетащите фото на страницу — или несколько фото одного экрана: они считаются вместе, и разброс между снимками
    усредняется. Страница найдёт метки, выпрямит перспективу, определит поворот, выровняет свет по бумаге и чёрным
    меткам, измерит 33 ступени и рассчитает кривую.
-4. Скачайте `panel_curve.txt` (или `panel_curve_book.txt` для картинок в книгах), положите в корень карты памяти,
+4. Скачайте `panel_curve.txt` (или `panel_curve_book.txt` для картинок в книгах), положите в скрытую папку `/.crosspoint/`
+   на карте памяти (на Mac скрытые файлы показывает `⌘⇧.`; для передачи по Wi-Fi включите **Показать скрытые файлы**
+   в настройках прошивки),
    и поставьте галочку в **Калибровке экрана**: кривая читается с карты в этот момент (если галочка стояла — снимите
    и поставьте снова).
 5. По желанию, вторая итерация: откройте тот же калибровочный экран — уже с поправкой — сфотографируйте, и страница

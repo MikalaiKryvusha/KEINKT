@@ -265,11 +265,11 @@ details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8p
     <div class="text">
       <h2 data-i18n="s4t">Установите поправку</h2>
       <ol class="how">
-        <li data-i18n="s4a">Положите файл в корень карты памяти — кабелем, по Wi-Fi через «Передачу файлов» или картридером: <span class="tag">panel_curve.txt</span> для картинок, <span class="tag">panel_curve_book.txt</span> для книг.</li>
+        <li data-i18n="s4a">Положите файл в скрытую папку <span class="tag">/.crosspoint/</span> на карте памяти — кабелем, по Wi-Fi через «Передачу файлов» или картридером: <span class="tag">panel_curve.txt</span> для картинок, <span class="tag">panel_curve_book.txt</span> для книг. На Mac скрытые файлы показывает ⌘⇧. Для передачи по Wi-Fi включите «Показать скрытые файлы» в настройках прошивки.</li>
         <li data-i18n="s4b">Калибровка экрана → включите галочку «Калибровка картинок» или «Калибровка книг».</li>
         <li data-i18n="s4c">Поправка читается с карты в момент, когда ставите галочку. Если галочка уже стояла — снимите и поставьте снова. Картинки перерисуются с новой поправкой сами.</li>
       </ol>
-      <p class="note" data-i18n="s4n">Вернуть как было: снимите галочку в «Калибровке экрана» или удалите файл из корня карты.</p>
+      <p class="note" data-i18n="s4n">Вернуть как было: снимите галочку в «Калибровке экрана». Файлы поправок хранятся в /.crosspoint/ вместе с настройками прошивки.</p>
     </div>
   </section>
   <section class="step" id="s5">
@@ -290,7 +290,7 @@ details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8p
   <div>
     <p data-i18n="h1"><b>Метки не находятся.</b> Снимите ближе и ровнее, чтобы все четыре угловые метки были в кадре и не попадали в блик. Если и так не выходит — инструмент предложит указать метки вручную.</p>
     <p data-i18n="h2"><b>«Похоже на ночной режим».</b> Выключите на читалке «Экран → Ночной режим» и переснимите.</p>
-    <p data-i18n="h3"><b>Картинки не изменились.</b> Проверьте имя файла (без «(1)» в конце), что он в корне карты и что галочка в «Калибровке экрана» включена, затем усыпите и разбудите читалку.</p>
+    <p data-i18n="h3"><b>Картинки не изменились.</b> Проверьте имя файла (без «(1)» в конце) и что он лежит в /.crosspoint/ на карте. Затем снимите и поставьте соответствующую галочку в «Калибровке экрана», чтобы перечитать поправку.</p>
     <p data-i18n="h4"><b>Стало хуже.</b> Скорее всего, фото было с бликом или под углом. Сбросьте калибровку и откалибруйте заново при ровном дневном свете.</p>
   </div>
 </details>
@@ -788,17 +788,17 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
       bars: 'A smooth black-to-white ramp on your screen (estimated from the measurement):', before: 'without correction', after: 'with correction',
       dlc: 'Download panel_curve.txt', retry: 'Add a photo', reset: 'Start over',
       s4t: 'Install the correction',
-      s4a: 'Put the file into the root of the memory card — by cable, over Wi-Fi with File Transfer or with a card reader: <span class="tag">panel_curve.txt</span> for pictures, <span class="tag">panel_curve_book.txt</span> for books.',
+      s4a: 'Put the file into the hidden <span class="tag">/.crosspoint/</span> folder on the memory card — by cable, over Wi-Fi with File Transfer or with a card reader: <span class="tag">panel_curve.txt</span> for pictures, <span class="tag">panel_curve_book.txt</span> for books. On a Mac, ⌘⇧. shows hidden files. For Wi-Fi transfer, enable Show Hidden Files in the firmware settings.',
       s4b: 'Screen calibration → turn on Pictures calibration or Books calibration.',
       s4c: 'The correction is read from the card the moment you tick the checkbox. If it was already ticked, untick it and tick it again. Pictures are redrawn with the new correction by themselves.',
-      s4n: 'To undo: turn the checkbox off in Screen calibration, or delete the file from the card root.',
+      s4n: 'To undo: turn the checkbox off in Screen calibration. The curve files live in /.crosspoint/ alongside the firmware settings.',
       s5t: 'Check the result',
       s5p: 'With the checkbox on, the same calibration screen shows the card with your correction. Photograph it the same way and upload it — the tool shows how evenly the tones fall and refines the correction from this photo. If you opened the page anew, upload the correction file that is on the card now together with the photo.',
       s5b: 'Upload the check photo',
       h0: 'If something went wrong',
       h1: '<b>The marks are not found.</b> Shoot closer and straighter, with all four corner marks in the frame and out of any glare. If that still fails, the tool offers to mark them by hand.',
       h2: '<b>“Looks like night mode”.</b> Turn off Display → Night mode on the reader and shoot again.',
-      h3: '<b>Pictures did not change.</b> Check the file name (no “(1)” at the end), that it is in the card root and that the checkbox in Screen calibration is on, then put the reader to sleep and wake it.',
+      h3: '<b>Pictures did not change.</b> Check the file name (no “(1)” at the end) and that it is in /.crosspoint/ on the card. Then turn the matching checkbox off and on in Screen calibration to reload the curve.',
       h4: '<b>It got worse.</b> Most likely the photo had glare or was taken at an angle. Reset the calibration and calibrate again in even daylight.',
     },
     msg: {
