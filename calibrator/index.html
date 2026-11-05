@@ -188,17 +188,10 @@ details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8p
   <div class="text">
     <h2 data-i18n="s1t">Откройте калибровочную карточку на читалке</h2>
     <ol class="how">
-      <li data-i18n="s1a">Настройки → Экран → <b>Калибровка экрана</b>.</li>
-      <li data-i18n="s1b"><b>Калибровочный экран картинок</b> — для фото и заставок; <b>калибровочный экран книг</b> — для картинок внутри книг. Читалка рисует карточку на весь экран без текущей поправки — так измеряется сам экран. Начните с картинок; книги — по желанию, тем же путём.</li>
+      <li data-i18n="s1a">Настройки → Экран → <b>Калибровка экрана</b>. Снимите галочку «Калибровка картинок» (для книг — «Калибровка книг»): тогда экран покажет карточку без поправки, и измерится сам экран.</li>
+      <li data-i18n="s1b">Откройте <b>калибровочный экран картинок</b> — для фото и заставок, или <b>калибровочный экран книг</b> — для картинок внутри книг. Начните с картинок; книги — по желанию, тем же путём.</li>
       <li data-i18n="s1c">Дождитесь, пока карточка дорисуется в сером, и выключите подсветку.</li>
     </ol>
-    <details>
-      <summary data-i18n="s1ft">В настройках нет «Калибровки экрана»?</summary>
-      <div>
-        <p data-i18n="s1fp">Для картинок можно скачать карточку файлом, положите в корень карты памяти (кабелем, по Wi-Fi через «Передачу файлов» или картридером) и откройте её в «Обзоре файлов». Имя файла не меняйте: по нему читалка показывает карточку без поправки.</p>
-        <button class="btn secondary" type="button" id="dl-card" data-i18n="s1fb">Скачать panel_calibration.bmp</button>
-      </div>
-    </details>
   </div>
   <div class="visual">
     <div class="cardframe">
@@ -280,12 +273,11 @@ details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8p
     <div class="n">5</div>
     <div class="text">
       <h2 data-i18n="s5t">Проверьте результат</h2>
-      <p data-i18n="s5p">Откройте тот же калибровочный экран с включённой галочкой: карточка будет уже с вашей поправкой. Сфотографируйте её так же и загрузите — инструмент покажет, насколько ровно легли тона.</p>
+      <p data-i18n="s5p">Когда галочка стоит, тот же калибровочный экран показывает карточку уже с вашей поправкой. Сфотографируйте её так же и загрузите — инструмент покажет, насколько ровно легли тона.</p>
       <div class="row">
         <label class="btn secondary" for="photo-check" data-i18n="s5b">Загрузить фото проверки</label>
         <input id="photo-check" type="file" accept="image/*" hidden>
       </div>
-      <p class="note" data-i18n="s5n">Нет «Калибровки экрана» в настройках — скачайте проверочную карточку картинок файлом: <button class="linkbtn" type="button" id="dl-check">panel_check.bmp</button></p>
     </div>
   </section>
 </div>
@@ -676,12 +668,9 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
       f3t: 'Your photo', f3: 'Is processed right here in this browser and is never sent anywhere.',
       n1: 'Open the card', n2: 'Photograph', n3: 'Upload the photo', n4: 'Install', n5: 'Check',
       s1t: 'Open the calibration card on the reader',
-      s1a: 'Settings → Display → <b>Screen calibration</b>.',
-      s1b: '<b>Pictures calibration screen</b> — for photos and sleep images; <b>books calibration screen</b> — for pictures inside books. The reader draws the card full screen without the current correction, so the screen itself is measured. Start with pictures; books are optional, the same way.',
+      s1a: 'Settings → Display → <b>Screen calibration</b>. Turn Pictures calibration off (for books, Books calibration): the screen then shows the card without correction, and the screen itself is measured.',
+      s1b: 'Open the <b>pictures calibration screen</b> — for photos and sleep images, or the <b>books calibration screen</b> — for pictures inside books. Start with pictures; books are optional, the same way.',
       s1c: 'Wait until it is drawn in gray, and turn the frontlight off.',
-      s1ft: 'No “Screen calibration” in Settings?',
-      s1fp: 'For pictures you can download the card as a file, put it into the root of the memory card (by cable, over Wi-Fi with File Transfer or with a card reader) and open it in Browse Files. Keep the file name: by it the reader shows the card without the correction.',
-      s1fb: 'Download panel_calibration.bmp',
       lg1: '<b>33 steps</b> from black to white measure the screen.',
       lg2: '<b>4 marks</b> in the corners let the tool find the card in the photo and straighten it.',
       lg3: '<b>Two cells at the bottom</b> tell how the card is turned and which card it is: the books card has the last one black.',
@@ -703,9 +692,8 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
       s4c: 'Put the reader to sleep with the power button and wake it again: the correction is read on wake. Pictures are redrawn with it by themselves.',
       s4n: 'To undo: turn the checkbox off in Screen calibration, or delete the file from the card root.',
       s5t: 'Check the result',
-      s5p: 'Open the same calibration screen with the checkbox on: the card now carries your correction. Photograph it the same way and upload it — the tool shows how evenly the tones fall.',
+      s5p: 'With the checkbox on, the same calibration screen shows the card with your correction. Photograph it the same way and upload it — the tool shows how evenly the tones fall.',
       s5b: 'Upload the check photo',
-      s5n: 'No Screen calibration in Settings — download the pictures check card as a file: <button class="linkbtn" type="button" id="dl-check">panel_check.bmp</button>',
       h0: 'If something went wrong',
       h1: '<b>The marks are not found.</b> Shoot closer and straighter, with all four corner marks in the frame and out of any glare. If that still fails, the tool offers to mark them by hand.',
       h2: '<b>“Looks like night mode”.</b> Turn off Display → Night mode on the reader and shoot again.',
@@ -815,9 +803,6 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
   }
-  $('dl-card').addEventListener('click', () => save(Calib.bmp(card, Calib.W, Calib.H), 'panel_calibration.bmp', 'image/bmp'));
-  // The check link sits inside translated text: re-bound on every language switch (delegated).
-  document.addEventListener('click', (e) => { if (e.target && e.target.id === 'dl-check') save(Calib.bmp(card, Calib.W, Calib.H), 'panel_check.bmp', 'image/bmp'); });
 
   // ---- photo ----
   let photo = null, last = null, manualPts = [], checkMode = false;
