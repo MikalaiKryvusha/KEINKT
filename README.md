@@ -28,6 +28,12 @@ Browser tools for e-ink readers: calibrate the screen's gray tones from a photo,
 server. The code is plain JavaScript modules built into the page (`<script type="module">`); a library a tool may need
 is baked into the file too — no npm, nothing fetched at run time. Nothing you load into a tool leaves your computer.
 
+> **Built for the Xteink X4 Pro and CrossPoint.** The tools are developed and tested on the **Xteink X4 Pro** and are
+> closely tied to the [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) firmware — in
+> particular to its much-improved fork [**krinik**](https://github.com/MikalaiKryvusha/crosspoint-reader), which draws
+> the calibration screens, reads the curves and shows pictures in gray through them. Other readers and firmwares may
+> work; they are not tested.
+
 | Tool | What it does | State |
 |---|---|---|
 | **KEINKT Calibrator** | Measures how your e-ink screen really shows grays, from one phone photo, and gives the reader a correction curve | in development |
@@ -101,6 +107,12 @@ MIT — see [LICENSE](LICENSE).
 сервера. Код — обычные JavaScript-модули, встроенные в страницу (`<script type="module">`); библиотека, если инструменту
 она понадобится, тоже вшивается в файл — без npm и без загрузок во время работы. Всё, что вы в него загружаете,
 остаётся на вашем компьютере.
+
+> **Сделано под Xteink X4 Pro и CrossPoint.** Инструменты разрабатываются и тестируются на **Xteink X4 Pro** и тесно
+> завязаны на прошивку [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) — в частности на её
+> сильно улучшенный форк [**krinik**](https://github.com/MikalaiKryvusha/crosspoint-reader): он рисует калибровочные
+> экраны, читает кривые и показывает картинки в сером через них. Другие читалки и прошивки могут работать, но не
+> тестируются.
 
 | Инструмент | Что делает | Состояние |
 |---|---|---|
