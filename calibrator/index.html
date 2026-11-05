@@ -949,8 +949,8 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
     }
     for (const [i, f] of photos.entries()) {
       checkMode = check || /check/i.test(f.name || '');
-      try { photo = await decode(f); } catch (e) { notes.push(['bad', `${f.name}: ${m('load')}`]); if (i === photos.length - 1) showError('load'); continue; }
-      photo.key = `${f.name}|${f.size}|${f.lastModified}`; manualPts = [];
+      try { photo = await decode(f); } catch (e) { notes.push(['bad', `${f.name}: ${m('load')}`]); if (i === photos.length - 1) showError('load', notes); continue; }
+      photo.key = `${f.name}|${f.size}|${f.lastModified}`; photo.batchKinds = batchKinds; manualPts = [];
       run(null, notes, false, batchKinds);
       // A failed photo in a batch stays named in the list; the last one keeps the full view (and manual marks).
       if (!last.ok && i < photos.length - 1) notes.push(['bad', `${f.name}: ${m(last.reason)}`]);
@@ -974,7 +974,9 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
   // batchKinds: kinds whose correction file came in the same drop — a photo of such a card was taken with it on.
   function run(quad, notes = [], again = false, batchKinds = new Set()) {
     const r = again ? last : Calib.analyze(photo, quad);
-    if (!again) { r.manual = !!quad; r.check = checkMode || (r.ok && batchKinds.has(r.kind)); r.quadUsed = quad; }
+    // Manual marks re-run the same photo without the batch: its kinds ride on the photo.
+    const kinds = batchKinds.size ? batchKinds : (photo && photo.batchKinds) || batchKinds;
+    if (!again) { r.manual = !!quad; r.check = checkMode || (r.ok && kinds.has(r.kind)); r.quadUsed = quad; }
     r.notes = notes;
     if (r.ok) {
       const list = series[r.kind], curve = r.check ? onCard[r.kind] : null;
@@ -989,8 +991,8 @@ if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
     last = r;
     showResult(r);
   }
-  function showError(reason) {
-    last = { ok: false, reason };
+  function showError(reason, notes = []) {
+    last = { ok: false, reason, notes };
     showResult(last);
   }
 
