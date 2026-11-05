@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Калибровка экрана читалки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: desktop first — a wide procedure sheet; each step is a band with the text and actions on the left and the
+   thing you look at (the card, the drawings, the measurement) on the right; one column on a phone. The panel's own four
+   tones (measured on the X4 Pro: 30, 105, 172, 233) are the recurring motif. */
+:root {
+  --bg: #eef0ef;
+  --surface: #ffffff;
+  --ink: #17191a;
+  --muted: #565d60;
+  --rule: #d3d8d8;
+  --accent: #0e6b66;
+  --accent-ink: #ffffff;
+  --ok: #1d7a3a;
+  --warn: #9a6200;
+  --bad: #b3261e;
+  --tone0: #1e1e1e; --tone1: #696967; --tone2: #acaba6; --tone3: #e9e7e0;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121516; --surface: #1b1f20; --ink: #e8ecec; --muted: #a3acae; --rule: #2e3537;
+    --accent: #4fc3b8; --accent-ink: #0b1312; --ok: #6fd18c; --warn: #f0b350; --bad: #ff8a80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121516; --surface: #1b1f20; --ink: #e8ecec; --muted: #a3acae; --rule: #2e3537;
+  --accent: #4fc3b8; --accent-ink: #0b1312; --ok: #6fd18c; --warn: #f0b350; --bad: #ff8a80;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body);
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.wrap {
+  max-width: 1200px; margin: 0 auto;
+  padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px; display: flex; flex-direction: column; gap: 24px;
+}
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: 46px; letter-spacing: -0.01em; }
+h2 { font-size: 26px; }
+h3 { font-size: 17px; }
+p { margin: 0; max-width: 65ch; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.brand { display: flex; flex-direction: column; gap: 12px; }
+.lang { display: flex; align-items: center; gap: 8px; }
+.lang select { font: 600 15px var(--body); padding: 8px 12px; border: 1px solid var(--rule); background: var(--surface);
+  color: var(--ink); border-radius: 6px; cursor: pointer; min-width: 160px; }
+.lang select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.lang-ico { width: 20px; height: 20px; color: var(--muted); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tones { display: flex; height: 10px; border-radius: 3px; overflow: hidden; width: 200px; }
+.tones span { flex: 1; }
+.intro { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; align-items: start; }
+.lede { font-size: 19px; }
+.facts { display: flex; flex-direction: column; gap: 10px; }
+.fact { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 16px; font-size: 15px; }
+.fact b { display: block; font-family: var(--display); font-size: 16px; margin-bottom: 2px; }
+.steps-nav { display: flex; gap: 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.steps-nav a { flex: 1; padding: 10px 12px; text-decoration: none; color: var(--ink); font-size: 14px; border-right: 1px solid var(--rule);
+  display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.steps-nav a:last-child { border-right: 0; }
+.steps-nav a b { font-family: var(--display); }
+.steps-nav a:hover { background: var(--bg); }
+.steps-nav a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.step { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 28px;
+  display: grid; grid-template-columns: 48px minmax(0, 5fr) minmax(0, 6fr); gap: 16px 28px; align-items: start; scroll-margin-top: 16px; }
+.step > .n { width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--bg);
+  display: grid; place-items: center; font: 700 19px var(--display); }
+.step .text { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.step .visual { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.step.wide .visual { grid-column: 2 / -1; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.pair > .step { grid-template-columns: 48px minmax(0, 1fr); }
+ol.how, ul.how { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 65ch; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font: 600 16px var(--body); padding: 12px 20px; border-radius: 8px;
+  border: 0; background: var(--accent); color: var(--accent-ink); cursor: pointer; text-decoration: none; width: fit-content; }
+.btn.secondary { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+.btn:focus-visible, .steps-nav a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.cardframe { display: flex; gap: 20px; align-items: flex-end; }
+.cardframe canvas { width: 216px; height: 360px; border: 1px solid var(--rule); border-radius: 4px; background: #fff; }
+.cardframe .legend { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--muted); }
+.cardframe .legend b { color: var(--ink); }
+.conds { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.cond { border: 1px solid var(--rule); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); }
+.cond .yn { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cond figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; }
+.cond svg { width: 100%; max-width: 124px; height: auto; }
+.cond .yes { color: var(--ok); } .cond .no { color: var(--bad); }
+.cond p { font-size: 14px; }
+.drop { border: 2px dashed var(--rule); border-radius: 10px; padding: 28px; display: flex; flex-direction: column; gap: 14px;
+  align-items: flex-start; }
+.drop.over { border-color: var(--accent); background: var(--bg); }
+.status { display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.status li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; font-size: 15px; }
+.status li::before { font-weight: 700; }
+.status li.ok::before { content: "✓"; color: var(--ok); }
+.status li.warn::before { content: "!"; color: var(--warn); }
+.status li.bad::before { content: "✕"; color: var(--bad); }
+.result { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 4fr) minmax(0, 4fr); gap: 24px; align-items: start; }
+.panel { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.panel canvas, .panel svg { width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+.cap { font-size: 13px; color: var(--muted); }
+.summary { display: flex; flex-direction: column; gap: 16px; }
+.bars { display: flex; flex-direction: column; gap: 6px; }
+.bars canvas { width: 100%; height: 34px; border-radius: 4px; border: 1px solid var(--rule); }
+.bars .lbl { font: 600 12px var(--mono); color: var(--muted); }
+.manual { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 24px; align-items: start; }
+.manual canvas { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--rule); cursor: crosshair; }
+.manual .side { display: flex; flex-direction: column; gap: 12px; }
+details { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 18px; }
+details summary { cursor: pointer; font-weight: 600; }
+details > div { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.note { font-size: 14px; color: var(--muted); }
+.linkbtn { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+.tag { display: inline-block; font: 600 13px var(--mono); padding: 1px 6px; border-radius: 4px; background: var(--bg); border: 1px solid var(--rule); }
+@media (max-width: 1000px) {
+  .conds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .result { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .result .summary { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  h1 { font-size: 32px; }
+  .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+  .top { flex-direction: column; align-items: flex-start; }
+  .intro, .pair, .result, .manual { grid-template-columns: 1fr; }
+  .steps-nav { display: none; }
+  .step, .pair > .step { grid-template-columns: 1fr; padding: 18px; }
+  .step.wide .visual { grid-column: auto; }
+  .conds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cardframe canvas { width: 144px; height: 240px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand">
+    <div class="tones" aria-hidden="true"><span style="background:var(--tone0)"></span><span style="background:var(--tone1)"></span><span style="background:var(--tone2)"></span><span style="background:var(--tone3)"></span></div>
+    <h1 data-i18n="title">Калибровка экрана читалки</h1>
+  </div>
+  <label class="lang">
+    <svg class="lang-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+    <span class="sr" id="lang-label">Язык</span>
+    <select id="lang-select" aria-labelledby="lang-label"></select>
+  </label>
+</header>
+
+<section class="intro">
+  <p class="lede" data-i18n="lede">Каждый e-ink экран показывает серые тона по-своему: один темнит тени, другой сливает светлые. Калибровка подстроит картинки под ваш экран, чтобы фото и заставки выглядели так же, как на компьютере. Нужны читалка, телефон с камерой и этот компьютер — минут десять.</p>
+  <div class="facts">
+    <div class="fact"><b data-i18n="f1t">Что изменится</b><span data-i18n="f1">Картинки в «Обзоре файлов» и свои заставки сна. Книги не меняются.</span></div>
+    <div class="fact"><b data-i18n="f2t">Что нужно</b><span data-i18n="f2">Прошивка CrossPoint с калибровкой экрана (krinik). Читалка X4 / X4 Pro.</span></div>
+    <div class="fact"><b data-i18n="f3t">Ваше фото</b><span data-i18n="f3">Обрабатывается прямо в этом браузере и никуда не отправляется.</span></div>
+  </div>
+</section>
+
+<nav class="steps-nav" aria-label="Шаги">
+  <a href="#s1"><b>1</b><span data-i18n="n1">Открыть карточку</span></a>
+  <a href="#s2"><b>2</b><span data-i18n="n2">Сфотографировать</span></a>
+  <a href="#s3"><b>3</b><span data-i18n="n3">Загрузить фото</span></a>
+  <a href="#s4"><b>4</b><span data-i18n="n4">Установить</span></a>
+  <a href="#s5"><b>5</b><span data-i18n="n5">Проверить</span></a>
+</nav>
+
+<section class="step" id="s1">
+  <div class="n">1</div>
+  <div class="text">
+    <h2 data-i18n="s1t">Откройте калибровочную карточку на читалке</h2>
+    <ol class="how">
+      <li data-i18n="s1a">Настройки → Экран → <b>Калибровка экрана</b>.</li>
+      <li data-i18n="s1b"><b>Калибровочный экран картинок</b> — для фото и заставок; <b>калибровочный экран книг</b> — для картинок внутри книг. Читалка рисует карточку на весь экран без текущей поправки — так измеряется сам экран. Начните с картинок; книги — по желанию, тем же путём.</li>
+      <li data-i18n="s1c">Дождитесь, пока карточка дорисуется в сером, и выключите подсветку.</li>
+    </ol>
+    <details>
+      <summary data-i18n="s1ft">В настройках нет «Калибровки экрана»?</summary>
+      <div>
+        <p data-i18n="s1fp">Для картинок можно скачать карточку файлом, положите в корень карты памяти (кабелем, по Wi-Fi через «Передачу файлов» или картридером) и откройте её в «Обзоре файлов». Имя файла не меняйте: по нему читалка показывает карточку без поправки.</p>
+        <button class="btn secondary" type="button" id="dl-card" data-i18n="s1fb">Скачать panel_calibration.bmp</button>
+      </div>
+    </details>
+  </div>
+  <div class="visual">
+    <div class="cardframe">
+      <canvas id="card-preview" width="480" height="800" aria-label="Калибровочная карточка"></canvas>
+      <div class="legend">
+        <span data-i18n="lg1"><b>33 ступени</b> от чёрного до белого — по ним измеряется экран.</span>
+        <span data-i18n="lg2"><b>4 метки</b> по углам — по ним инструмент находит карточку на фото и сам её выпрямляет.</span>
+        <span data-i18n="lg3"><b>Две клетки внизу</b> — по ним понятно, как карточка повёрнута и какая она: у карточки книг последняя клетка чёрная.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="step wide" id="s2">
+  <div class="n">2</div>
+  <div class="text">
+    <h2 data-i18n="s2t">Сфотографируйте экран</h2>
+    <p data-i18n="s2p">От съёмки зависит точность. Именно так снималась кривая, с которой калибровка проверялась на настоящей читалке. Снимайте камерой или телефоном в обычном режиме, без вспышки, ночного режима и фильтров; карточка — целиком в кадре и как можно крупнее.</p>
+  </div>
+  <div class="visual"><div class="conds" id="conds"></div></div>
+</section>
+
+<section class="step wide" id="s3">
+  <div class="n">3</div>
+  <div class="text">
+    <h2 data-i18n="s3t">Загрузите фото сюда</h2>
+  </div>
+  <div class="visual">
+    <div class="drop" id="drop">
+      <p data-i18n="s3p">Перенесите фото с телефона на компьютер и перетащите его сюда — или выберите файл.</p>
+      <div class="row">
+        <label class="btn" for="photo" data-i18n="s3b">Выбрать фото</label>
+        <input id="photo" type="file" accept="image/*" hidden>
+        <button class="btn secondary" type="button" id="demo" data-i18n="demo">Посмотреть на примере</button>
+      </div>
+      <p class="note" data-i18n="s3n">Фото с iPhone в формате HEIC открывается не во всех браузерах. Если не загрузилось: на iPhone Настройки → Камера → Форматы → «Наиболее совместимый», или откройте эту страницу в Safari.</p>
+    </div>
+    <div id="manual" class="manual" hidden>
+      <canvas id="manual-canvas"></canvas>
+      <div class="side">
+        <p data-i18n="manp">Не получилось найти метки автоматически. Нажмите на фото по центру каждой из четырёх чёрных меток по углам карточки — в любом порядке.</p>
+        <span class="muted" id="manual-count"></span>
+        <button class="btn secondary" type="button" id="manual-reset" data-i18n="manr">Сбросить точки</button>
+      </div>
+    </div>
+    <div id="result" class="result" hidden>
+      <div class="panel"><canvas id="found" width="240" height="400"></canvas><span class="cap" data-i18n="cap1">Что нашёл инструмент: карточка выпрямлена, рамки — места замера</span></div>
+      <div class="panel"><svg id="chart" viewBox="0 0 320 320" role="img" aria-label="Кривая экрана"></svg><span class="cap" data-i18n="cap2">Точки — ваш экран без поправки; линия — поправка, которую получит читалка; пунктир — идеал</span></div>
+      <div class="summary">
+        <ul class="status" id="status"></ul>
+        <div class="bars" id="bars">
+          <span class="cap" data-i18n="bars">Плавный переход от чёрного к белому на вашем экране (оценка по замеру):</span>
+          <span class="lbl" data-i18n="before">без поправки</span><canvas id="bar-before" width="640" height="34"></canvas>
+          <span class="lbl" data-i18n="after">с поправкой</span><canvas id="bar-after" width="640" height="34"></canvas>
+        </div>
+        <div class="row">
+          <button class="btn" type="button" id="dl-curve" data-i18n="dlc">Скачать panel_curve.txt</button>
+          <button class="btn secondary" type="button" id="retry" data-i18n="retry">Другое фото</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="pair">
+  <section class="step" id="s4">
+    <div class="n">4</div>
+    <div class="text">
+      <h2 data-i18n="s4t">Установите поправку</h2>
+      <ol class="how">
+        <li data-i18n="s4a">Положите файл в корень карты памяти — кабелем, по Wi-Fi через «Передачу файлов» или картридером: <span class="tag">panel_curve.txt</span> для картинок, <span class="tag">panel_curve_book.txt</span> для книг.</li>
+        <li data-i18n="s4b">Калибровка экрана → включите галочку «Калибровка картинок» или «Калибровка книг».</li>
+        <li data-i18n="s4c">Усыпите читалку кнопкой питания и разбудите снова: поправка читается при пробуждении. Картинки перерисуются с ней сами.</li>
+      </ol>
+      <p class="note" data-i18n="s4n">Вернуть как было: снимите галочку в «Калибровке экрана» или удалите файл из корня карты.</p>
+    </div>
+  </section>
+  <section class="step" id="s5">
+    <div class="n">5</div>
+    <div class="text">
+      <h2 data-i18n="s5t">Проверьте результат</h2>
+      <p data-i18n="s5p">Откройте тот же калибровочный экран с включённой галочкой: карточка будет уже с вашей поправкой. Сфотографируйте её так же и загрузите — инструмент покажет, насколько ровно легли тона.</p>
+      <div class="row">
+        <label class="btn secondary" for="photo-check" data-i18n="s5b">Загрузить фото проверки</label>
+        <input id="photo-check" type="file" accept="image/*" hidden>
+      </div>
+      <p class="note" data-i18n="s5n">Нет «Калибровки экрана» в настройках — скачайте проверочную карточку картинок файлом: <button class="linkbtn" type="button" id="dl-check">panel_check.bmp</button></p>
+    </div>
+  </section>
+</div>
+
+<details>
+  <summary data-i18n="h0">Если что-то пошло не так</summary>
+  <div>
+    <p data-i18n="h1"><b>Метки не находятся.</b> Снимите ближе и ровнее, чтобы все четыре угловые метки были в кадре и не попадали в блик. Если и так не выходит — инструмент предложит указать метки вручную.</p>
+    <p data-i18n="h2"><b>«Похоже на ночной режим».</b> Выключите на читалке «Экран → Ночной режим» и переснимите.</p>
+    <p data-i18n="h3"><b>Картинки не изменились.</b> Проверьте имя файла (без «(1)» в конце), что он в корне карты и что галочка в «Калибровке экрана» включена, затем усыпите и разбудите читалку.</p>
+    <p data-i18n="h4"><b>Стало хуже.</b> Скорее всего, фото было с бликом или под углом. Сбросьте калибровку и откалибруйте заново при ровном дневном свете.</p>
+  </div>
+</details>
+
+</div>
+
+<script type="module">
+// ===== CORE-BEGIN (pure functions, no DOM; tested by tools/panel-calibration/test.mjs) =====
+const Calib = (() => {
+  const W = 480, H = 800, F = 56, HOLE = 24, FM = 12;
+  const FID = [[FM + F / 2, FM + F / 2], [W - FM - F / 2, FM + F / 2], [W - FM - F / 2, H - FM - F / 2], [FM + F / 2, H - FM - F / 2]];
+  const COLS = 5, ROWS = 7, CELL = 72, GAP = 12;
+  const GX = (W - (COLS * CELL + (COLS - 1) * GAP)) / 2, GY = (H - (ROWS * CELL + (ROWS - 1) * GAP)) / 2;
+  const LEVELS = Array.from({ length: 33 }, (_, i) => Math.round(i * 255 / 32));
+  // 35 cells, row-major: 33 levels from black to white, then two cells of paper. The first is always white (it also
+  // tells the card's rotation); the last one names the card: white — pictures (viewer, sleep images), black — books.
+  const CELLS = Array.from({ length: COLS * ROWS }, (_, i) => ({
+    v: i < LEVELS.length ? LEVELS[i] : null,
+    x: GX + (i % COLS) * (CELL + GAP), y: GY + Math.floor(i / COLS) * (CELL + GAP),
+  }));
+
+  function renderCard(kind = 'pictures') {
+    const px = new Uint8ClampedArray(W * H).fill(255);
+    const rect = (x, y, w, h, v) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) px[j * W + i] = v; };
+    for (const c of CELLS) if (c.v !== null) rect(c.x, c.y, CELL, CELL, c.v);
+    if (kind === 'books') { const c = CELLS[34]; rect(c.x, c.y, CELL, CELL, 0); }
+    for (const [cx, cy] of FID) {
+      rect(cx - F / 2, cy - F / 2, F, F, 0);
+      rect(cx - HOLE / 2, cy - HOLE / 2, HOLE, HOLE, 255);
+    }
+    return px;
+  }
+
+  // 24-bit uncompressed BMP, bottom-up (what the reader's converter reads most simply).
+  function bmp(px, w, h) {
+    const row = w * 3, pad = (4 - row % 4) % 4, size = 54 + (row + pad) * h;
+    const b = new Uint8Array(size), dv = new DataView(b.buffer);
+    b[0] = 0x42; b[1] = 0x4d; dv.setUint32(2, size, true); dv.setUint32(10, 54, true); dv.setUint32(14, 40, true);
+    dv.setInt32(18, w, true); dv.setInt32(22, h, true); dv.setUint16(26, 1, true); dv.setUint16(28, 24, true);
+    dv.setUint32(34, (row + pad) * h, true); dv.setInt32(38, 2835, true); dv.setInt32(42, 2835, true);
+    let o = 54;
+    for (let y = h - 1; y >= 0; y--) {
+      for (let x = 0; x < w; x++) { const v = px[y * w + x]; b[o++] = v; b[o++] = v; b[o++] = v; }
+      o += pad;
+    }
+    return b;
+  }
+
+  // --- detection on a luma image {w, h, d: Float32Array 0..255} ---
+  function darkMask(img) {
+    const { w, h, d } = img, S = new Float64Array((w + 1) * (h + 1));
+    for (let y = 0; y < h; y++) {
+      let r = 0;
+      for (let x = 0; x < w; x++) { r += d[y * w + x]; S[(y + 1) * (w + 1) + x + 1] = S[y * (w + 1) + x + 1] + r; }
+    }
+    const k = Math.max(7, Math.round(Math.max(w, h) / 14)), m = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) {
+      const y0 = Math.max(0, y - k), y1 = Math.min(h, y + k + 1);
+      for (let x = 0; x < w; x++) {
+        const x0 = Math.max(0, x - k), x1 = Math.min(w, x + k + 1);
+        const sum = S[y1 * (w + 1) + x1] - S[y0 * (w + 1) + x1] - S[y1 * (w + 1) + x0] + S[y0 * (w + 1) + x0];
+        const mean = sum / ((y1 - y0) * (x1 - x0)), v = d[y * w + x];
+        m[y * w + x] = v < mean * 0.72 && v < mean - 14 ? 1 : 0;
+      }
+    }
+    return m;
+  }
+
+  function components(m, w, h) {
+    const lab = new Int32Array(w * h), comps = [], stack = new Int32Array(w * h);
+    let id = 0;
+    for (let i = 0; i < w * h; i++) {
+      if (!m[i] || lab[i]) continue;
+      id++;
+      let sp = 0, area = 0, minx = w, maxx = 0, miny = h, maxy = 0;
+      stack[sp++] = i; lab[i] = id;
+      while (sp) {
+        const p = stack[--sp], x = p % w, y = (p - x) / w;
+        area++; if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y;
+        if (x > 0 && m[p - 1] && !lab[p - 1]) { lab[p - 1] = id; stack[sp++] = p - 1; }
+        if (x < w - 1 && m[p + 1] && !lab[p + 1]) { lab[p + 1] = id; stack[sp++] = p + 1; }
+        if (y > 0 && m[p - w] && !lab[p - w]) { lab[p - w] = id; stack[sp++] = p - w; }
+        if (y < h - 1 && m[p + w] && !lab[p + w]) { lab[p + w] = id; stack[sp++] = p + w; }
+      }
+      comps.push({ id, area, minx, maxx, miny, maxy });
+    }
+    return { lab, comps };
+  }
+
+  // Pixels inside the component's box that are not the component and not reachable from the box border: its hole.
+  function hole(c, lab, w) {
+    const bw = c.maxx - c.minx + 1, bh = c.maxy - c.miny + 1, seen = new Uint8Array(bw * bh), q = new Int32Array(bw * bh);
+    let qs = 0, qe = 0;
+    const own = (i) => lab[(c.miny + Math.floor(i / bw)) * w + c.minx + (i % bw)] === c.id;
+    const push = (i) => { if (!seen[i] && !own(i)) { seen[i] = 1; q[qe++] = i; } };
+    for (let x = 0; x < bw; x++) { push(x); push((bh - 1) * bw + x); }
+    for (let y = 0; y < bh; y++) { push(y * bw); push(y * bw + bw - 1); }
+    while (qs < qe) {
+      const i = q[qs++], x = i % bw, y = (i - x) / bw;
+      if (x > 0) push(i - 1); if (x < bw - 1) push(i + 1); if (y > 0) push(i - bw); if (y < bh - 1) push(i + bw);
+    }
+    let a = 0, sx = 0, sy = 0;
+    for (let i = 0; i < bw * bh; i++) if (!seen[i] && !own(i)) { a++; sx += i % bw; sy += Math.floor(i / bw); }
+    return a ? { area: a, x: c.minx + sx / a + 0.5, y: c.miny + sy / a + 0.5 } : { area: 0 };
+  }
+
+  function fiducialCandidates(img) {
+    const { w, h } = img, m = darkMask(img), { lab, comps } = components(m, w, h), out = [];
+    for (const c of comps) {
+      const bw = c.maxx - c.minx + 1, bh = c.maxy - c.miny + 1;
+      if (c.area < 30 || bw < 6 || bh < 6) continue;
+      if (bw > w / 3 || bh > h / 3) continue;
+      const asp = bw / bh; if (asp < 0.35 || asp > 2.9) continue;
+      const fill = c.area / (bw * bh); if (fill < 0.3 || fill > 0.97) continue;
+      const ho = hole(c, lab, w); if (!ho.area) continue;
+      const ratio = ho.area / (ho.area + c.area); if (ratio < 0.05 || ratio > 0.42) continue;
+      const cx = (c.minx + c.maxx + 1) / 2, cy = (c.miny + c.maxy + 1) / 2;
+      if (Math.hypot(ho.x - cx, ho.y - cy) > 0.22 * Math.max(bw, bh)) continue;
+      out.push({ x: ho.x, y: ho.y, size: Math.sqrt(c.area + ho.area) });
+    }
+    return out.sort((a, b) => b.size - a.size).slice(0, 14);
+  }
+
+  function orderQuad(p) {
+    const cx = p.reduce((s, q) => s + q.x, 0) / 4, cy = p.reduce((s, q) => s + q.y, 0) / 4;
+    return p.slice().sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+  }
+  function quadArea(q) {
+    let a = 0; for (let i = 0; i < 4; i++) { const p = q[i], n = q[(i + 1) % 4]; a += p.x * n.y - n.x * p.y; }
+    return Math.abs(a) / 2;
+  }
+  function convex(q) {
+    let sign = 0;
+    for (let i = 0; i < 4; i++) {
+      const a = q[i], b = q[(i + 1) % 4], c = q[(i + 2) % 4];
+      const z = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+      if (Math.abs(z) < 1e-9) return false;
+      if (sign === 0) sign = Math.sign(z); else if (Math.sign(z) !== sign) return false;
+    }
+    return true;
+  }
+
+  // Four similar marks spanning the largest convex quad.
+  function pickFour(c) {
+    let best = null;
+    const n = c.length;
+    for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) for (let d = b + 1; d < n; d++) for (let e = d + 1; e < n; e++) {
+      const s = [c[a], c[b], c[d], c[e]], sz = s.map((q) => q.size);
+      if (Math.max(...sz) / Math.min(...sz) > 2.2) continue;
+      const q = orderQuad(s);
+      if (!convex(q)) continue;
+      const area = quadArea(q), mean = sz.reduce((x, y) => x + y) / 4;
+      if (area < 20 * mean * mean) continue;
+      if (!best || area > best.area) best = { q, area };
+    }
+    return best ? best.q : null;
+  }
+
+  function homography(src, dst) {
+    const A = [], bv = [];
+    for (let i = 0; i < 4; i++) {
+      const [x, y] = src[i], [u, v] = dst[i];
+      A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); bv.push(u);
+      A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); bv.push(v);
+    }
+    for (let c = 0; c < 8; c++) {
+      let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+      [A[c], A[p]] = [A[p], A[c]]; [bv[c], bv[p]] = [bv[p], bv[c]];
+      if (Math.abs(A[c][c]) < 1e-12) return null;
+      for (let r = 0; r < 8; r++) {
+        if (r === c) continue;
+        const f = A[r][c] / A[c][c];
+        for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k];
+        bv[r] -= f * bv[c];
+      }
+    }
+    const h = bv.map((v, i) => v / A[i][i]);
+    return [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], 1];
+  }
+  const apply = (Hm, x, y) => { const z = Hm[6] * x + Hm[7] * y + Hm[8]; return [(Hm[0] * x + Hm[1] * y + Hm[2]) / z, (Hm[3] * x + Hm[4] * y + Hm[5]) / z]; };
+
+  function sample(img, x, y) {
+    const { w, h, d } = img;
+    if (x < 0 || y < 0 || x > w - 1.001 || y > h - 1.001) return NaN;
+    const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0, i = y0 * w + x0;
+    return d[i] * (1 - fx) * (1 - fy) + d[i + 1] * fx * (1 - fy) + d[i + w] * (1 - fx) * fy + d[i + w + 1] * fx * fy;
+  }
+  const median = (a) => { const s = a.filter(Number.isFinite).sort((x, y) => x - y); return s.length ? s[s.length >> 1] : NaN; };
+
+  // Raw readings through a card → photo homography.
+  function read(img, Hm) {
+    const patches = [], whites = [], blacks = [];
+    for (const c of CELLS) {
+      const vals = [];
+      for (let j = 0; j < 9; j++) for (let i = 0; i < 9; i++) {
+        const [px, py] = apply(Hm, c.x + CELL * (0.2 + 0.6 * i / 8), c.y + CELL * (0.2 + 0.6 * j / 8));
+        vals.push(sample(img, px, py));
+      }
+      const ok = vals.filter(Number.isFinite), mean = ok.reduce((s, v) => s + v, 0) / Math.max(1, ok.length);
+      patches.push({ mean, max: Math.max(...ok), n: ok.length, cx: c.x + CELL / 2, cy: c.y + CELL / 2 });
+      // White paper in the middle of the gaps around the cell.
+      const g = GAP / 2;
+      for (let t = 0.15; t < 0.9; t += 0.175) {
+        for (const [x, y] of [[c.x + CELL * t, c.y - g], [c.x + CELL * t, c.y + CELL + g], [c.x - g, c.y + CELL * t], [c.x + CELL + g, c.y + CELL * t]]) {
+          const [px, py] = apply(Hm, x, y), v = sample(img, px, py);
+          if (Number.isFinite(v)) whites.push({ x, y, v });
+        }
+      }
+      if (c.v === null) whites.push({ x: c.x + CELL / 2, y: c.y + CELL / 2, v: mean });
+    }
+    const r = (F / 2 + HOLE / 2) / 2;
+    for (const [fx, fy] of FID) {
+      for (const [dx, dy] of [[-r, -r], [0, -r], [r, -r], [r, 0], [r, r], [0, r], [-r, r], [-r, 0]]) {
+        const [px, py] = apply(Hm, fx + dx, fy + dy), v = sample(img, px, py);
+        if (Number.isFinite(v)) blacks.push({ x: fx + dx, y: fy + dy, v });
+      }
+    }
+    return { patches, whites, blacks };
+  }
+
+  // z = a + b·x + c·y, robust: refit without the worst residuals.
+  function plane(pts) {
+    let use = pts;
+    let coef = [median(pts.map((p) => p.v)), 0, 0];
+    for (let it = 0; it < 3 && use.length >= 3; it++) {
+      const M = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], r = [0, 0, 0];
+      for (const p of use) {
+        const v = [1, p.x / W, p.y / H];
+        for (let i = 0; i < 3; i++) { r[i] += v[i] * p.v; for (let j = 0; j < 3; j++) M[i][j] += v[i] * v[j]; }
+      }
+      const sol = solve3(M, r); if (!sol) break;
+      coef = sol;
+      const res = pts.map((p) => Math.abs(p.v - (coef[0] + coef[1] * p.x / W + coef[2] * p.y / H)));
+      const mad = median(res) || 1;
+      use = pts.filter((_, i) => res[i] <= 3 * mad + 1);
+    }
+    const at = (x, y) => coef[0] + coef[1] * x / W + coef[2] * y / H;
+    const res = pts.map((p) => p.v - at(p.x, p.y));
+    const spread = Math.sqrt(res.reduce((s, v) => s + v * v, 0) / Math.max(1, res.length));
+    return { at, spread };
+  }
+  function solve3(M, r) {
+    const a = M.map((row, i) => [...row, r[i]]);
+    for (let c = 0; c < 3; c++) {
+      let p = c; for (let k = c + 1; k < 3; k++) if (Math.abs(a[k][c]) > Math.abs(a[p][c])) p = k;
+      [a[c], a[p]] = [a[p], a[c]];
+      if (Math.abs(a[c][c]) < 1e-9) return null;
+      for (let k = 0; k < 3; k++) { if (k === c) continue; const f = a[k][c] / a[c][c]; for (let j = c; j < 4; j++) a[k][j] -= f * a[c][j]; }
+    }
+    return [a[0][3] / a[0][0], a[1][3] / a[1][1], a[2][3] / a[2][2]];
+  }
+
+  function spearman(a, b) {
+    const rank = (v) => { const idx = v.map((x, i) => [x, i]).sort((p, q) => p[0] - q[0]), r = new Array(v.length); idx.forEach(([, i], k) => { r[i] = k; }); return r; };
+    const ra = rank(a), rb = rank(b), n = a.length;
+    let d = 0; for (let i = 0; i < n; i++) d += (ra[i] - rb[i]) ** 2;
+    return 1 - 6 * d / (n * (n * n - 1));
+  }
+
+  // Card corners (TL, TR, BR, BL) to the four photo marks, in each of the 4 rotations (a phone photo is never mirrored:
+  // a mirrored guess still rises row by row and would score almost as well); the one whose 33 patches rise from black
+  // to white wins.
+  function locate(img, quad) {
+    let best = null;
+    {
+      const q = quad;
+      for (let rot = 0; rot < 4; rot++) {
+        const dst = [0, 1, 2, 3].map((k) => q[(k + rot) % 4]);
+        const Hm = homography(FID, dst.map((p) => [p.x, p.y]));
+        if (!Hm) continue;
+        const rd = read(img, Hm), means = rd.patches.slice(0, 33).map((p) => p.mean);
+        if (means.some((v) => !Number.isFinite(v))) continue;
+        const rho = spearman(LEVELS, means);
+        const blankOk = rd.patches[33].mean > means[16];
+        const score = rho + (blankOk ? 0.05 : 0);
+        if (!best || score > best.score) best = { score, rho, Hm, rd, dst };
+      }
+    }
+    return best;
+  }
+
+  // Pool-adjacent-violators: the closest non-decreasing sequence.
+  function isotonic(y) {
+    const blocks = y.map((v) => ({ s: v, n: 1 }));
+    for (let i = 0; i < blocks.length - 1;) {
+      if (blocks[i].s / blocks[i].n > blocks[i + 1].s / blocks[i + 1].n) {
+        blocks[i].s += blocks[i + 1].s; blocks[i].n += blocks[i + 1].n; blocks.splice(i + 1, 1);
+        if (i > 0) i--;
+      } else i++;
+    }
+    const out = []; for (const b of blocks) for (let k = 0; k < b.n; k++) out.push(b.s / b.n);
+    return out;
+  }
+
+  // seen[i] (0..1) for LEVELS[i] → table: wanted on-screen tone t → file value fed to the panel (what the reader reads).
+  function curveFrom(seen) {
+    const mono = isotonic(seen.map((v) => Math.min(1, Math.max(0, v))));
+    const lo = mono[0], hi = mono[mono.length - 1];
+    if (!(hi - lo > 0.25)) return null;
+    const resp = mono.map((v) => (v - lo) / (hi - lo));
+    const pts = []; let last = -1;
+    resp.forEach((s, i) => { if (s > last + 1e-4) { pts.push([s, LEVELS[i] / 255]); last = s; } });
+    if (pts[pts.length - 1][0] < 1) pts.push([1, 1]);
+    const table = new Uint8Array(256);
+    for (let t = 0; t < 256; t++) {
+      const want = t / 255; let f = 1;
+      for (let k = 0; k < pts.length - 1; k++) {
+        const [s1, f1] = pts[k], [s2, f2] = pts[k + 1];
+        if (want <= s2) { f = s2 > s1 ? f1 + (f2 - f1) * (want - s1) / (s2 - s1) : f2; break; }
+      }
+      if (want <= pts[0][0]) f = pts[0][1];
+      table[t] = Math.round(255 * Math.min(1, Math.max(0, f)));
+    }
+    table[0] = 0; table[255] = 255;
+    for (let t = 1; t < 256; t++) if (table[t] < table[t - 1]) table[t] = table[t - 1];
+    return { table, resp };
+  }
+  // Panel response at any file value, interpolated from the measured points.
+  function respAt(resp, f) {
+    const x = f * 32; const i = Math.min(31, Math.floor(x)), t = x - i;
+    return resp[i] * (1 - t) + resp[i + 1] * t;
+  }
+
+  function analyze(img, manualQuad) {
+    const issues = [];
+    let quad = manualQuad || null, inverted = false;
+    if (!quad) {
+      const c = fiducialCandidates(img); quad = pickFour(c);
+      if (!quad) {
+        const inv = { w: img.w, h: img.h, d: img.d.map((v) => 255 - v) };
+        if (pickFour(fiducialCandidates(inv))) inverted = true;
+        return { ok: false, reason: inverted ? 'night' : 'marks' };
+      }
+    } else quad = orderQuad(quad);
+    const minSide = Math.min(...quad.map((p, i) => Math.hypot(p.x - quad[(i + 1) % 4].x, p.y - quad[(i + 1) % 4].y)));
+    const loc = locate(img, quad);
+    if (!loc) return { ok: false, reason: 'marks' };
+    if (loc.rho < -0.85) return { ok: false, reason: 'night' };
+    if (loc.rho < 0.8) return { ok: false, reason: 'order', rho: loc.rho };
+    const { rd } = loc, white = plane(rd.whites), black = plane(rd.blacks);
+    const wMed = median(rd.whites.map((p) => p.v)), bMed = median(rd.blacks.map((p) => p.v)), range = wMed - bMed;
+    if (range < 40) return { ok: false, reason: 'dark' };
+    const seen = rd.patches.slice(0, 33).map((p) => {
+      const wv = white.at(p.cx, p.cy), bv = black.at(p.cx, p.cy);
+      return (p.mean - bv) / Math.max(1, wv - bv);
+    });
+    const sides = loc.dst.map((p, i) => Math.hypot(p.x - loc.dst[(i + 1) % 4].x, p.y - loc.dst[(i + 1) % 4].y));
+    const tilt = Math.max(sides[0] / sides[2], sides[2] / sides[0], sides[1] / sides[3], sides[3] / sides[1]);
+    if (minSide < 220) issues.push('small');
+    if (tilt > 1.18) issues.push('tilt');
+    if (white.spread > 0.07 * range) issues.push('uneven');
+    if (wMed > 250 || rd.patches.slice(24, 35).some((p) => p.max >= 254.5)) issues.push('bright');
+    if (range < 90) issues.push('lowlight');
+    if (loc.rho < 0.97) issues.push('noisy');
+    const curve = curveFrom(seen);
+    if (!curve) return { ok: false, reason: 'flat' };
+    // The last cell: paper for the pictures card, black for the books card.
+    const last = rd.patches[34], lw = white.at(last.cx, last.cy), lb = black.at(last.cx, last.cy);
+    const kind = (last.mean - lb) / Math.max(1, lw - lb) < 0.5 ? 'books' : 'pictures';
+    return { ok: true, kind, quad: loc.dst, Hm: loc.Hm, rho: loc.rho, seen, ...curve, issues, white, black };
+  }
+
+  return { W, H, F, HOLE, FID, CELLS, CELL, LEVELS, renderCard, bmp, fiducialCandidates, pickFour, orderQuad, homography, apply, sample, analyze, curveFrom, respAt, isotonic };
+})();
+if (typeof globalThis !== 'undefined') globalThis.Calib = Calib;
+// ===== CORE-END =====
+</script>
+
+<script type="module">
+(() => {
+  const T = {
+    ru: {},  // the Russian text is the page itself; filled from the DOM on start
+    en: {
+      title: 'E-reader screen calibration',
+      lede: 'Every e-ink screen shows grays its own way: one crushes shadows, another washes out highlights. Calibration tunes pictures to your screen so photos and sleep images look the way they do on a computer. You need the reader, a phone with a camera and this computer — about ten minutes.',
+      f1t: 'What changes', f1: 'Pictures opened from Browse Files and your own sleep images. Books stay as they are.',
+      f2t: 'What you need', f2: 'CrossPoint firmware with screen calibration (krinik). An X4 / X4 Pro reader.',
+      f3t: 'Your photo', f3: 'Is processed right here in this browser and is never sent anywhere.',
+      n1: 'Open the card', n2: 'Photograph', n3: 'Upload the photo', n4: 'Install', n5: 'Check',
+      s1t: 'Open the calibration card on the reader',
+      s1a: 'Settings → Display → <b>Screen calibration</b>.',
+      s1b: '<b>Pictures calibration screen</b> — for photos and sleep images; <b>books calibration screen</b> — for pictures inside books. The reader draws the card full screen without the current correction, so the screen itself is measured. Start with pictures; books are optional, the same way.',
+      s1c: 'Wait until it is drawn in gray, and turn the frontlight off.',
+      s1ft: 'No “Screen calibration” in Settings?',
+      s1fp: 'For pictures you can download the card as a file, put it into the root of the memory card (by cable, over Wi-Fi with File Transfer or with a card reader) and open it in Browse Files. Keep the file name: by it the reader shows the card without the correction.',
+      s1fb: 'Download panel_calibration.bmp',
+      lg1: '<b>33 steps</b> from black to white measure the screen.',
+      lg2: '<b>4 marks</b> in the corners let the tool find the card in the photo and straighten it.',
+      lg3: '<b>Two cells at the bottom</b> tell how the card is turned and which card it is: the books card has the last one black.',
+      s2t: 'Photograph the screen',
+      s2p: 'Accuracy depends on the photo. This is how the curve tested on a real reader was shot. Use a camera or a phone in its ordinary mode, without flash, night mode or filters; keep the whole card in the frame and as large as possible.',
+      s3t: 'Upload the photo here',
+      s3p: 'Move the photo from the phone to this computer and drop it here — or choose a file.',
+      s3b: 'Choose photo', demo: 'Try with an example photo',
+      s3n: 'iPhone HEIC photos do not open in every browser. If it does not load: on the iPhone Settings → Camera → Formats → Most Compatible, or open this page in Safari.',
+      manp: 'The marks were not found automatically. Click the center of each of the four black corner marks in the photo — in any order.',
+      manr: 'Reset points',
+      cap1: 'What the tool found: the card straightened, frames show where it measured',
+      cap2: 'Dots — your screen without correction; line — the correction the reader gets; dashed — ideal',
+      bars: 'A smooth black-to-white ramp on your screen (estimated from the measurement):', before: 'without correction', after: 'with correction',
+      dlc: 'Download panel_curve.txt', retry: 'Another photo',
+      s4t: 'Install the correction',
+      s4a: 'Put the file into the root of the memory card — by cable, over Wi-Fi with File Transfer or with a card reader: <span class="tag">panel_curve.txt</span> for pictures, <span class="tag">panel_curve_book.txt</span> for books.',
+      s4b: 'Screen calibration → turn on Pictures calibration or Books calibration.',
+      s4c: 'Put the reader to sleep with the power button and wake it again: the correction is read on wake. Pictures are redrawn with it by themselves.',
+      s4n: 'To undo: turn the checkbox off in Screen calibration, or delete the file from the card root.',
+      s5t: 'Check the result',
+      s5p: 'Open the same calibration screen with the checkbox on: the card now carries your correction. Photograph it the same way and upload it — the tool shows how evenly the tones fall.',
+      s5b: 'Upload the check photo',
+      s5n: 'No Screen calibration in Settings — download the pictures check card as a file: <button class="linkbtn" type="button" id="dl-check">panel_check.bmp</button>',
+      h0: 'If something went wrong',
+      h1: '<b>The marks are not found.</b> Shoot closer and straighter, with all four corner marks in the frame and out of any glare. If that still fails, the tool offers to mark them by hand.',
+      h2: '<b>“Looks like night mode”.</b> Turn off Display → Night mode on the reader and shoot again.',
+      h3: '<b>Pictures did not change.</b> Check the file name (no “(1)” at the end), that it is in the card root and that the checkbox in Screen calibration is on, then put the reader to sleep and wake it.',
+      h4: '<b>It got worse.</b> Most likely the photo had glare or was taken at an angle. Reset the calibration and calibrate again in even daylight.',
+    },
+    msg: {
+      ru: {
+        found: 'Карточка {k} найдена, все 33 ступени измерены', manualFound: 'Карточка {k} найдена по вашим точкам', kpictures: 'картинок', kbooks: 'книг',
+        marks: 'Не нашлись четыре угловые метки. Снимите ближе и ровнее или укажите метки вручную ниже.',
+        night: 'Похоже на ночной режим: карточка светлая на тёмном. Выключите «Экран → Ночной режим» и переснимите.',
+        order: 'Ступени на фото идут не по порядку — вероятно, блик или сильный наклон. Переснимите.',
+        dark: 'Слишком мало света: чёрное и белое на фото почти не различаются. Снимите при дневном свете.',
+        flat: 'Экран на фото почти не меняется от чёрного к белому — замер не получился. Переснимите.',
+        small: 'Карточка в кадре мелкая — точность ниже. Лучше снять крупнее.',
+        tilt: 'Телефон был под наклоном к экрану. Результат годный, но ровная съёмка точнее.',
+        uneven: 'Освещение неровное или есть блик. Результат годный, но при ровном свете точнее.',
+        bright: 'Светлые места на фото пересвечены. Снимите в тени или уменьшите экспозицию.',
+        lowlight: 'Света маловато — тёмные ступени измерены грубо.',
+        noisy: 'Несколько ступеней выбиваются из ряда — их сгладило. Если результат не понравится, переснимите.',
+        good: 'Можно скачивать {f}', checkGood: 'Проверка: тона легли ровно, отклонение до {d} %',
+        checkBad: 'Проверка: отклонение до {d} %. Если глазом видно, откалибруйте заново',
+        load: 'Не удалось открыть фото. Если это HEIC с iPhone — см. подсказку выше.',
+        points: 'Отмечено точек: {n} из 4', checkMode: 'Это проверочная карточка — файл поправки не нужен',
+      },
+      en: {
+        found: 'The {k} card found, all 33 steps measured', manualFound: 'The {k} card found from your points', kpictures: 'pictures', kbooks: 'books',
+        marks: 'The four corner marks were not found. Shoot closer and straighter, or mark them by hand below.',
+        night: 'Looks like night mode: the card is light on dark. Turn off Display → Night mode and shoot again.',
+        order: 'The steps in the photo are out of order — probably glare or a strong angle. Shoot again.',
+        dark: 'Too little light: black and white barely differ in the photo. Shoot in daylight.',
+        flat: 'The screen barely changes from black to white in the photo — the measurement failed. Shoot again.',
+        small: 'The card is small in the frame — less accurate. Better shoot it larger.',
+        tilt: 'The phone was tilted to the screen. The result is usable, a straight shot is more accurate.',
+        uneven: 'Uneven light or glare. The result is usable, even light is more accurate.',
+        bright: 'Light areas are overexposed. Shoot in shade or lower the exposure.',
+        lowlight: 'A bit too little light — dark steps are measured roughly.',
+        noisy: 'A few steps stand out of line and were smoothed. If you do not like the result, shoot again.',
+        good: 'Ready to download {f}', checkGood: 'Check: tones fall evenly, deviation up to {d} %',
+        checkBad: 'Check: deviation up to {d} %. If you can see it, calibrate again',
+        load: 'Could not open the photo. If it is an iPhone HEIC, see the hint above.',
+        points: 'Points marked: {n} of 4', checkMode: 'This is the check card — no correction file needed',
+      },
+    },
+  };
+  let lang = 'ru';
+  const $ = (id) => document.getElementById(id);
+  document.querySelectorAll('[data-i18n]').forEach((el) => { T.ru[el.dataset.i18n] = el.innerHTML; });
+  const m = (k, vars) => (T.msg[lang][k] || k).replace(/\{(\w+)\}/g, (_, v) => vars[v]);
+  function setLang(l) {
+    lang = l;
+    document.documentElement.lang = l;
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.innerHTML = T[l][el.dataset.i18n] ?? T.ru[el.dataset.i18n]; });
+    document.title = T[l].title || T.ru.title;
+    $('lang-select').value = l;
+    $('lang-label').textContent = l === 'ru' ? 'Язык' : 'Language';
+    document.querySelector('.steps-nav').setAttribute('aria-label', l === 'ru' ? 'Шаги' : 'Steps');
+    try { localStorage.setItem('calib-lang', l); } catch (e) {}
+    renderConds();
+    if (last) showResult(last);
+  }
+  const LANGS = [['ru', 'Русский'], ['en', 'English']];
+  $('lang-select').innerHTML = LANGS.map(([c, n]) => `<option value="${c}">${n}</option>`).join('');
+  $('lang-select').addEventListener('change', (e) => setLang(e.target.value));
+
+  // ---- shooting conditions: do / don't drawings ----
+  const reader = (screen, extra = '', tilt = 0) => `<g transform="rotate(${tilt} 48 50)"><rect x="24" y="8" width="48" height="80" rx="6" fill="#2b2d2e"/><rect x="29" y="14" width="38" height="64" fill="${screen}"/><circle cx="48" cy="83" r="2" fill="#8a8f90"/>${extra}</g>`;
+  const steps = '<rect x="33" y="20" width="30" height="7" fill="#1e1e1e"/><rect x="33" y="30" width="30" height="7" fill="#696967"/><rect x="33" y="40" width="30" height="7" fill="#acaba6"/>';
+  const svg = (inner) => `<svg viewBox="0 0 96 96" aria-hidden="true">${inner}</svg>`;
+  const COND = {
+    ru: [
+      ['Подсветка выключена', 'Свет подсветки ложится на серое неровно и меняет замер.', 'выкл', 'вкл'],
+      ['Светлая тема', 'Ночной режим выключите: карточка должна быть тёмным по светлому.', 'светлая', 'ночная'],
+      ['Дневной свет', 'Лучше на улице или у окна, при ровном естественном свете.', 'день', 'лампа'],
+      ['Без бликов и теней', 'Блик съедает тёмные ступени, тень от камеры или руки темнит светлые. Встаньте так, чтобы солнце или окно не отражались в экране, а тень не падала на него.', 'ровно', 'блик, тень'],
+      ['Без наклона', 'Держите камеру ровно, а читалку — параллельно ей: объектив смотрит прямо на экран, карточка крупно в кадре.', 'прямо', 'наклон'],
+    ],
+    en: [
+      ['Frontlight off', 'The frontlight falls unevenly on gray and changes the measurement.', 'off', 'on'],
+      ['Light theme', 'Turn night mode off: the card must be dark on light.', 'light', 'night'],
+      ['Daylight', 'Outdoors or by a window is best, in even natural light.', 'day', 'lamp'],
+      ['No glare or shadows', 'Glare eats the dark steps; the shadow of the camera or a hand darkens the light ones. Stand so the sun or a window does not reflect in the screen and no shadow falls on it.', 'even', 'glare, shadow'],
+      ['No tilt', 'Hold the camera level and the reader parallel to it: the lens looks straight at the screen, the card large in the frame.', 'straight', 'tilted'],
+    ],
+  };
+  const DRAW = [
+    [svg(reader('#e9e7e0', steps)), svg(reader('#f7f3d6', steps + '<g stroke="#e0a800" stroke-width="2.5"><line x1="48" y1="2" x2="48" y2="8"/><line x1="16" y1="20" x2="22" y2="24"/><line x1="80" y1="20" x2="74" y2="24"/><line x1="12" y1="50" x2="20" y2="50"/><line x1="84" y1="50" x2="76" y2="50"/></g>'))],
+    [svg(reader('#e9e7e0', steps)), svg(reader('#1e1e1e', '<rect x="33" y="20" width="30" height="7" fill="#e9e7e0"/><rect x="33" y="30" width="30" height="7" fill="#acaba6"/><rect x="33" y="40" width="30" height="7" fill="#696967"/>'))],
+    [svg('<g stroke="#e9a800" stroke-width="2" stroke-linecap="round"><line x1="92.0" y1="15.0" x2="95.5" y2="15.0"/><line x1="89.1" y1="22.1" x2="91.5" y2="24.5"/><line x1="82.0" y1="25.0" x2="82.0" y2="28.5"/><line x1="74.9" y1="22.1" x2="72.5" y2="24.5"/><line x1="72.0" y1="15.0" x2="68.5" y2="15.0"/><line x1="74.9" y1="7.9" x2="72.5" y2="5.5"/><line x1="82.0" y1="5.0" x2="82.0" y2="1.5"/><line x1="89.1" y1="7.9" x2="91.5" y2="5.5"/></g><circle cx="82" cy="15" r="7" fill="#f4b400"/>' + reader('#e9e7e0', steps)),
+     svg('<line x1="14" y1="0" x2="14" y2="7" stroke="#55595b" stroke-width="1.5"/><path d="M4 17 Q4 7 14 7 Q24 7 24 17 Z" fill="#3d4243"/><ellipse cx="14" cy="17.5" rx="4" ry="1.8" fill="#ffe7a3"/><path d="M7 18 L21 18 L66 92 L6 92 Z" fill="#f2c14e" opacity="0.5"/>' + reader('#e8dcb0', steps))],
+    [svg(reader('#e9e7e0', steps)), svg(reader('#e9e7e0', steps + '<path d="M44 64 L60 20 L66 20 L50 64 Z" fill="#ffffff" opacity="0.95"/><path d="M29 40 L29 78 L62 78 Z" fill="#1e1e1e" opacity="0.32"/>'))],
+    [svg('<g stroke="#8a8f90" stroke-width="1.4" stroke-dasharray="3 3"><line x1="48" y1="30" x2="20" y2="77"/><line x1="48" y1="30" x2="76" y2="77"/></g><g transform="translate(48 78)"><rect x="-34" y="0" width="68" height="8" rx="2" fill="#2b2d2e"/><rect x="-28" y="-1" width="56" height="2" fill="#e9e7e0"/></g><g transform="translate(48 18)"><rect x="-17" y="-9" width="34" height="13" rx="2.5" fill="#3d4243"/><rect x="-12" y="-12" width="7" height="4" rx="1" fill="#3d4243"/><rect x="5" y="-12" width="9" height="4" rx="1.5" fill="#55595b"/><path d="M-8 4 L8 4 L6.5 11 L-6.5 11 Z" fill="#1e1e1e"/><rect x="-7" y="10" width="14" height="2" rx="1" fill="#55595b"/></g>'), svg('<g stroke="#8a8f90" stroke-width="1.4" stroke-dasharray="3 3"><line x1="48" y1="30" x2="20" y2="77"/><line x1="48" y1="30" x2="76" y2="77"/></g><g transform="translate(48 72) rotate(-24)"><rect x="-34" y="0" width="68" height="8" rx="2" fill="#2b2d2e"/><rect x="-28" y="-1" width="56" height="2" fill="#e9e7e0"/></g><g transform="translate(48 18)"><rect x="-17" y="-9" width="34" height="13" rx="2.5" fill="#3d4243"/><rect x="-12" y="-12" width="7" height="4" rx="1" fill="#3d4243"/><rect x="5" y="-12" width="9" height="4" rx="1.5" fill="#55595b"/><path d="M-8 4 L8 4 L6.5 11 L-6.5 11 Z" fill="#1e1e1e"/><rect x="-7" y="10" width="14" height="2" rx="1" fill="#55595b"/></g>')],
+  ];
+  function renderConds() {
+    $('conds').innerHTML = COND[lang].map(([t, p, y, n], i) => `<div class="cond"><h3>${t}</h3><div class="yn"><figure>${DRAW[i][0]}<span class="yes">✓ ${y}</span></figure><figure>${DRAW[i][1]}<span class="no">✕ ${n}</span></figure></div><p>${p}</p></div>`).join('');
+  }
+
+  // ---- card ----
+  const card = Calib.renderCard();
+  (() => {
+    const c = $('card-preview'), x = c.getContext('2d'), id = x.createImageData(Calib.W, Calib.H);
+    card.forEach((v, i) => { id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; });
+    x.putImageData(id, 0, 0);
+  })();
+  function save(bytes, name, type) {
+    const url = URL.createObjectURL(new Blob([bytes], { type }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  }
+  $('dl-card').addEventListener('click', () => save(Calib.bmp(card, Calib.W, Calib.H), 'panel_calibration.bmp', 'image/bmp'));
+  // The check link sits inside translated text: re-bound on every language switch (delegated).
+  document.addEventListener('click', (e) => { if (e.target && e.target.id === 'dl-check') save(Calib.bmp(card, Calib.W, Calib.H), 'panel_check.bmp', 'image/bmp'); });
+
+  // ---- photo ----
+  let photo = null, last = null, manualPts = [], checkMode = false;
+  async function loadFile(file, check = false) {
+    if (!file) return;
+    checkMode = check || /check/i.test(file.name || '');
+    try {
+      const bmpImg = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => null);
+      const src = bmpImg || await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); });
+      const sw = src.width, sh = src.height, k = Math.min(1, 1600 / Math.max(sw, sh));
+      const cw = Math.round(sw * k), ch = Math.round(sh * k);
+      const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+      const cx = cv.getContext('2d'); cx.drawImage(src, 0, 0, cw, ch);
+      const data = cx.getImageData(0, 0, cw, ch).data, d = new Float32Array(cw * ch);
+      for (let i = 0; i < cw * ch; i++) d[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+      photo = { w: cw, h: ch, d, canvas: cv };
+      manualPts = [];
+      run(null);
+    } catch (e) {
+      showError('load');
+    }
+  }
+  $('photo').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
+  $('photo-check').addEventListener('change', (e) => { loadFile(e.target.files[0], true); e.target.value = ''; $('s3').scrollIntoView(); });
+  const drop = $('drop');
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); loadFile(e.dataTransfer.files[0]); });
+  $('retry').addEventListener('click', () => $('photo').click());
+
+  function run(quad) {
+    const r = Calib.analyze(photo, quad);
+    r.manual = !!quad; r.check = checkMode;
+    last = r;
+    showResult(r);
+  }
+  function showError(reason) {
+    last = { ok: false, reason };
+    showResult(last);
+  }
+
+  function showResult(r) {
+    $('result').hidden = false;
+    const st = [];
+    if (!r.ok) {
+      st.push(['bad', m(r.reason)]);
+      $('status').innerHTML = st.map(([c, t]) => `<li class="${c}">${t}</li>`).join('');
+      document.querySelectorAll('#result .panel, #bars, #dl-curve').forEach((el) => { el.hidden = true; });
+      if (photo && (r.reason === 'marks' || r.reason === 'order')) openManual(); else $('manual').hidden = true;
+      return;
+    }
+    $('manual').hidden = !r.manual;
+    const file = r.kind === 'books' ? 'panel_curve_book.txt' : 'panel_curve.txt';
+    st.push(['ok', m(r.manual ? 'manualFound' : 'found', { k: m('k' + r.kind) })]);
+    for (const k of r.issues) st.push([k === 'bright' ? 'bad' : 'warn', m(k)]);
+    let dev = 0;
+    if (r.check) {
+      r.seen.forEach((s, i) => { dev = Math.max(dev, Math.abs(s - Calib.LEVELS[i] / 255)); });
+      dev = Math.round(dev * 100);
+      st.push([dev <= 8 ? 'ok' : 'warn', m(dev <= 8 ? 'checkGood' : 'checkBad', { d: dev })]);
+      st.push(['ok', m('checkMode')]);
+    } else st.push([r.issues.includes('bright') ? 'warn' : 'ok', m('good', { f: file })]);
+    $('dl-curve').textContent = (lang === 'ru' ? 'Скачать ' : 'Download ') + file;
+    $('status').innerHTML = st.map(([c, t]) => `<li class="${c}">${t}</li>`).join('');
+    document.querySelectorAll('#result .panel, #bars').forEach((el) => { el.hidden = false; });
+    $('dl-curve').hidden = r.check;
+    drawFound(r); drawChart(r); drawBars(r);
+  }
+
+  function drawFound(r) {
+    const c = $('found'), x = c.getContext('2d'), s = c.width / Calib.W, id = x.createImageData(c.width, c.height);
+    for (let j = 0; j < c.height; j++) for (let i = 0; i < c.width; i++) {
+      const [px, py] = Calib.apply(r.Hm, (i + 0.5) / s, (j + 0.5) / s), v = Calib.sample(photo, px, py), o = (j * c.width + i) * 4;
+      id.data[o] = id.data[o + 1] = id.data[o + 2] = Number.isFinite(v) ? v : 0; id.data[o + 3] = 255;
+    }
+    x.putImageData(id, 0, 0);
+    const css = getComputedStyle(document.documentElement);
+    x.strokeStyle = css.getPropertyValue('--accent').trim() || '#0e6b66'; x.lineWidth = 1.5;
+    Calib.CELLS.forEach((cell) => { x.strokeRect((cell.x + Calib.CELL * 0.2) * s, (cell.y + Calib.CELL * 0.2) * s, Calib.CELL * 0.6 * s, Calib.CELL * 0.6 * s); });
+  }
+
+  function drawChart(r) {
+    const P = 36, S = 320 - P - 12, X = (v) => P + v * S, Y = (v) => 320 - P - v * S;
+    let g = '';
+    for (let k = 0; k <= 4; k++) {
+      const v = k / 4;
+      g += `<line x1="${X(0)}" y1="${Y(v)}" x2="${X(1)}" y2="${Y(v)}" stroke="var(--rule)"/><text x="${X(0) - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${k * 25}</text>`;
+      g += `<text x="${X(v)}" y="${320 - P + 16}" text-anchor="middle" font-size="11" fill="var(--muted)">${k * 25}</text>`;
+    }
+    g += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}" stroke="var(--muted)" stroke-dasharray="4 4"/>`;
+    if (!r.check) {
+      let d = ''; for (let t = 0; t < 256; t += 3) d += `${t ? 'L' : 'M'}${X(t / 255).toFixed(1)} ${Y(r.table[t] / 255).toFixed(1)}`;
+      d += `L${X(1)} ${Y(r.table[255] / 255)}`;
+      g += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+    }
+    r.seen.forEach((s, i) => { g += `<circle cx="${X(Calib.LEVELS[i] / 255).toFixed(1)}" cy="${Y(Math.min(1, Math.max(0, s))).toFixed(1)}" r="3.2" fill="var(--ink)"/>`; });
+    g += `<text x="${X(0.5)}" y="316" text-anchor="middle" font-size="11" fill="var(--muted)">${lang === 'ru' ? 'тон в файле, %' : 'tone in file, %'}</text>`;
+    g += `<text transform="translate(10 ${Y(0.5)}) rotate(-90)" text-anchor="middle" font-size="11" fill="var(--muted)">${lang === 'ru' ? 'на экране, %' : 'on screen, %'}</text>`;
+    $('chart').innerHTML = g;
+  }
+
+  function drawBars(r) {
+    const resp = r.resp || Calib.isotonic(r.seen);
+    for (const [id, after] of [['bar-before', false], ['bar-after', true]]) {
+      const c = $(id), x = c.getContext('2d'), w = c.width;
+      for (let i = 0; i < w; i++) {
+        const want = i / (w - 1), f = after && !r.check ? r.table[Math.round(want * 255)] / 255 : want;
+        const v = Math.round(255 * Math.min(1, Math.max(0, Calib.respAt(resp, f))));
+        x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(i, 0, 1, c.height);
+      }
+    }
+  }
+
+  $('dl-curve').addEventListener('click', () => {
+    if (!last || !last.ok) return;
+    const t = Array.from(last.table), lines = [];
+    for (let i = 0; i < 256; i += 16) lines.push(t.slice(i, i + 16).join(' '));
+    save(new TextEncoder().encode(lines.join('\n') + '\n'), last.kind === 'books' ? 'panel_curve_book.txt' : 'panel_curve.txt', 'text/plain');
+  });
+
+  // ---- manual marks ----
+  function openManual() {
+    $('manual').hidden = false;
+    drawManual();
+  }
+  function drawManual() {
+    const c = $('manual-canvas'); c.width = photo.w; c.height = photo.h;
+    const x = c.getContext('2d'); x.drawImage(photo.canvas, 0, 0);
+    x.fillStyle = '#e8401c'; x.strokeStyle = '#ffffff'; x.lineWidth = Math.max(2, photo.w / 400);
+    const rad = Math.max(6, photo.w / 120);
+    manualPts.forEach((p) => { x.beginPath(); x.arc(p.x, p.y, rad, 0, Math.PI * 2); x.fill(); x.stroke(); });
+    $('manual-count').textContent = m('points', { n: manualPts.length });
+  }
+  $('manual-canvas').addEventListener('click', (e) => {
+    if (!photo || manualPts.length >= 4) return;
+    const c = e.currentTarget, rc = c.getBoundingClientRect();
+    manualPts.push({ x: (e.clientX - rc.left) * c.width / rc.width, y: (e.clientY - rc.top) * c.height / rc.height });
+    drawManual();
+    if (manualPts.length === 4) run(manualPts.slice());
+  });
+  $('manual-reset').addEventListener('click', () => { manualPts = []; drawManual(); });
+
+  // ---- example photo: the card as an X4 Pro shows it, photographed (measured response, 03.11.2026) ----
+  const X4PRO = [[0, 0], [15, 1.9], [20, 8.3], [25, 15.5], [30, 21.2], [35, 28.6], [40, 36.4], [45, 42.3], [50, 50], [55, 51.4],
+    [60, 62.8], [65, 74.7], [70, 83.2], [75, 86.5], [80, 91.2], [85, 95.6], [90, 98.4], [95, 100], [100, 100]];
+  const panelShow = (f) => { const x = f * 100; for (let i = 0; i < X4PRO.length - 1; i++) { const [a, b] = X4PRO[i], [c, d] = X4PRO[i + 1]; if (x <= c) return (b + (d - b) * (x - a) / (c - a)) / 100; } return 1; };
+  function examplePhoto(kind) {
+    const w = 900, h = 1200, d = new Float32Array(w * h);
+    const corners = kind === 'warn' ? [[250, 230], [690, 170], [740, 1040], [215, 990]] : [[220, 200], [680, 200], [680, 1020], [220, 1020]];
+    const toCard = Calib.homography(corners, Calib.FID), shown = Calib.renderCard();
+    let seed = 7; const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const [u, v] = Calib.apply(toCard, x, y); let val;
+      if (u >= 0 && v >= 0 && u < Calib.W && v < Calib.H) {
+        let s = panelShow(shown[Math.floor(v) * Calib.W + Math.floor(u)] / 255);
+        if (kind === 'night') s = 1 - s;
+        const L = kind === 'warn' ? 1 + 0.14 * (x / w - 0.5) - 0.1 * (y / h - 0.5) : 1;
+        val = (30 + 196 * s) * L;
+      } else val = (u > -36 && v > -36 && u < Calib.W + 36 && v < Calib.H + 90) ? 38 : 168 - 30 * (y / h);
+      d[y * w + x] = Math.max(0, Math.min(255, val + (rnd() - 0.5) * 6));
+    }
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const cx = cv.getContext('2d'), id = cx.createImageData(w, h);
+    for (let i = 0; i < w * h; i++) { id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = d[i]; id.data[i * 4 + 3] = 255; }
+    cx.putImageData(id, 0, 0);
+    return { w, h, d, canvas: cv };
+  }
+  function demo(kind) {
+    photo = examplePhoto(kind === 'check' ? 'ok' : kind); manualPts = []; checkMode = kind === 'check';
+    if (kind === 'manual') { last = { ok: false, reason: 'marks' }; showResult(last); $('s3').scrollIntoView(); return; }
+    run(null);
+    if (kind === 'check' && last.ok) { last.seen = last.seen.map((_, i) => panelShow(last.table[Calib.LEVELS[i]] / 255)); showResult(last); }
+    $('s3').scrollIntoView();
+  }
+  $('demo').addEventListener('click', () => demo('ok'));
+  const fromHash = () => { const k = (location.hash.match(/^#demo-(ok|warn|night|manual|check)$/) || [])[1]; if (k) demo(k); };
+  window.addEventListener('hashchange', fromHash);
+
+  let start = 'ru';
+  try { start = localStorage.getItem('calib-lang') || ((navigator.language || 'ru').toLowerCase().startsWith('ru') ? 'ru' : 'en'); } catch (e) {}
+  setLang(start);
+  fromHash();
+})();
+</script>
+</body>
+</html>

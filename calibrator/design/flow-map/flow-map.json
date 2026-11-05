@@ -1,0 +1,263 @@
+{
+  "title": "Калибровка экрана — экраны и переходы",
+  "project": "KEINKT",
+  "subtitle": "Web tool: the card from Settings → Display → Screen calibration → a photo of the screen → the curve panel_curve.txt / panel_curve_book.txt. Desktop 1440 px, shot from the page itself (calibrator/index.html).",
+  "description": "K E-Ink Tools — browser tools for e-ink readers",
+  "lang": "ru",
+  "screen": {
+    "width": 1440,
+    "height": 1000
+  },
+  "shoot": {
+    "base": "index.html",
+    "format": "webp",
+    "pause": 1200,
+    "storage": {
+      "calib-lang": "ru"
+    },
+    "locale": "ru-RU"
+  },
+  "screens": [
+    {
+      "id": "start",
+      "name": "Начало",
+      "address": "#top",
+      "note": "Зачем калибровка, что изменится, что нужно, приватность; шаги 1–5 навигацией",
+      "file": "design/flow-map/screens/start.webp",
+      "x": 380,
+      "y": 260
+    },
+    {
+      "id": "card",
+      "name": "1. Открыть карточку",
+      "address": "#s1",
+      "note": "Настройки → Экран → Калибровка экрана: экран картинок / книг; запасной путь — файлом",
+      "file": "design/flow-map/screens/card.webp",
+      "x": 2050,
+      "y": 260
+    },
+    {
+      "id": "shoot",
+      "name": "2. Как снимать",
+      "address": "#s2",
+      "note": "Пять условий «так / не так»: подсветка, тема, свет, блик, наклон",
+      "file": "design/flow-map/screens/shoot.webp",
+      "x": 3720,
+      "y": 260
+    },
+    {
+      "id": "upload",
+      "name": "3. Загрузка фото",
+      "address": "#s3",
+      "note": "Перетащить / выбрать / пример; подсказка про HEIC",
+      "file": "design/flow-map/screens/upload.webp",
+      "x": 380,
+      "y": 2128
+    },
+    {
+      "id": "ok",
+      "name": "Результат: готово",
+      "address": "#demo-ok",
+      "height": 1000,
+      "note": "Найденная карточка, график, полосы без/с поправкой, «Скачать panel_curve.txt»",
+      "file": "design/flow-map/screens/ok.webp",
+      "x": 2050,
+      "y": 2128
+    },
+    {
+      "id": "warn",
+      "name": "Результат с замечаниями",
+      "address": "#demo-warn",
+      "note": "Наклон / неровный свет: годно, с советом переснять",
+      "file": "design/flow-map/screens/warn.webp",
+      "x": 3720,
+      "y": 3996
+    },
+    {
+      "id": "night",
+      "name": "Ошибка: ночной режим",
+      "address": "#demo-night",
+      "note": "Карточка светлым по тёмному — выключить ночной режим и переснять",
+      "file": "design/flow-map/screens/night.webp",
+      "x": 380,
+      "y": 3996
+    },
+    {
+      "id": "manual",
+      "name": "Ручные метки",
+      "address": "#demo-manual",
+      "note": "Метки не нашлись: четыре клика по угловым меткам",
+      "file": "design/flow-map/screens/manual.webp",
+      "x": 2050,
+      "y": 3996
+    },
+    {
+      "id": "install",
+      "name": "4–5. Установить и проверить",
+      "address": "#s4",
+      "note": "Файл в корень, галочка в «Калибровке экрана», усыпить-разбудить; проверка тем же экраном",
+      "file": "design/flow-map/screens/install.webp",
+      "x": 3720,
+      "y": 2128
+    },
+    {
+      "id": "check",
+      "name": "Проверка: результат",
+      "address": "#demo-check",
+      "note": "Карточка с поправкой: насколько ровно легли тона",
+      "file": "design/flow-map/screens/check.webp",
+      "x": 5390,
+      "y": 2128
+    }
+  ],
+  "links": [
+    {
+      "from": "start",
+      "to": "card",
+      "label": "начать"
+    },
+    {
+      "from": "card",
+      "to": "shoot",
+      "label": "карточка на экране"
+    },
+    {
+      "from": "shoot",
+      "to": "upload",
+      "label": "снял"
+    },
+    {
+      "from": "upload",
+      "to": "ok",
+      "label": "фото"
+    },
+    {
+      "from": "upload",
+      "to": "warn",
+      "label": "фото с наклоном"
+    },
+    {
+      "from": "upload",
+      "to": "night",
+      "label": "ночной режим"
+    },
+    {
+      "from": "upload",
+      "to": "manual",
+      "label": "метки не нашлись"
+    },
+    {
+      "from": "manual",
+      "to": "ok",
+      "label": "4 клика"
+    },
+    {
+      "from": "night",
+      "to": "shoot",
+      "label": "переснять"
+    },
+    {
+      "from": "warn",
+      "to": "install",
+      "label": "скачать файл"
+    },
+    {
+      "from": "ok",
+      "to": "install",
+      "label": "скачать файл"
+    },
+    {
+      "from": "install",
+      "to": "check",
+      "label": "фото проверки"
+    }
+  ],
+  "layout": [
+    {
+      "name": "Подготовка",
+      "places": [
+        [
+          "start",
+          0,
+          0
+        ],
+        [
+          "card",
+          1,
+          0
+        ],
+        [
+          "shoot",
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "Замер и установка",
+      "places": [
+        [
+          "upload",
+          0,
+          0
+        ],
+        [
+          "ok",
+          1,
+          0
+        ],
+        [
+          "install",
+          2,
+          0
+        ],
+        [
+          "check",
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "Отклонения при замере",
+      "places": [
+        [
+          "night",
+          0,
+          0
+        ],
+        [
+          "manual",
+          1,
+          0
+        ],
+        [
+          "warn",
+          2,
+          0
+        ]
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "name": "Подготовка",
+      "y": 260,
+      "height": 1488
+    },
+    {
+      "name": "Замер и установка",
+      "y": 2128,
+      "height": 1488
+    },
+    {
+      "name": "Отклонения при замере",
+      "y": 3996,
+      "height": 1488
+    }
+  ],
+  "sheet": {
+    "width": 7180,
+    "height": 5984
+  }
+}
