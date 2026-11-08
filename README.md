@@ -29,7 +29,7 @@ Browser tools for e-ink readers: calibrate the screen's gray tones from a photo,
 > **Sister project — [KCCP · Krinik Custom CrossPoint](https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint)**, the
 > custom CrossPoint Reader firmware for the Xteink X4 Pro (formerly *krinik*). The two projects work as one: KCCP draws the
 > calibration cards, reads the curves KEINKT makes and shows pictures and sleep screens through them.
-> **[KCCP firmware releases →](https://github.com/MikalaiKryvusha/crosspoint-reader/releases)**
+> **[KCCP firmware releases →](https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint/releases)**
 
 
 **KEINKT** is a set of small tools for people who read on e-ink. Each tool is one HTML file: download it from
@@ -136,7 +136,7 @@ MIT — see [LICENSE](LICENSE).
 > **Проект-побратим — [KCCP · Krinik Custom CrossPoint](https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint)**,
 > своя прошивка CrossPoint Reader для Xteink X4 Pro (прежнее имя — *krinik*). Два проекта работают как одно целое: KCCP
 > рисует калибровочные карточки, читает кривые, которые делает KEINKT, и показывает через них картинки и заставки сна.
-> **[Релизы прошивки KCCP →](https://github.com/MikalaiKryvusha/crosspoint-reader/releases)**
+> **[Релизы прошивки KCCP →](https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint/releases)**
 
 
 **KEINKT** — набор небольших инструментов для тех, кто читает с e-ink. Каждый инструмент — один HTML-файл: скачайте его
