@@ -20,10 +20,17 @@ Browser tools for e-ink readers: calibrate the screen's gray tones from a photo,
   <img src="https://img.shields.io/badge/single_HTML_file-no_install-0E6B66.svg" alt="A single HTML file, no install">
   <img src="https://img.shields.io/badge/dependencies-0-3DDC84.svg" alt="Zero dependencies">
   <img src="https://img.shields.io/badge/offline-your_photo_stays_local-555D60.svg" alt="Works offline, your photo stays on your computer">
-  <a href="https://github.com/MikalaiKryvusha/crosspoint-reader"><img src="https://img.shields.io/badge/firmware-CrossPoint_krinik-1E1E1E.svg" alt="Firmware: CrossPoint krinik"></a>
+  <a href="https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint"><img src="https://img.shields.io/badge/firmware-KCCP-1E1E1E.svg" alt="Firmware: KCCP"></a>
 </p>
 
 [Читать по-русски →](#russian)
+
+> [!TIP]
+> **Sister project — [KCCP · Krinik Custom CrossPoint](https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint)**, the
+> custom CrossPoint Reader firmware for the Xteink X4 Pro (formerly *krinik*). The two projects work as one: KCCP draws the
+> calibration cards, reads the curves KEINKT makes and shows pictures and sleep screens through them.
+> **[KCCP firmware releases →](https://github.com/MikalaiKryvusha/crosspoint-reader/releases)**
+
 
 **KEINKT** is a set of small tools for people who read on e-ink. Each tool is one HTML file: download it from
 [Releases](../../releases), open it with a double click, and it works in the browser — no install, no account, no
@@ -32,7 +39,7 @@ is baked into the file too — no npm, nothing fetched at run time. Nothing you 
 
 > **Built for the Xteink X4 Pro and CrossPoint.** The tools are developed and tested on the **Xteink X4 Pro** and are
 > closely tied to the [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) firmware — in
-> particular to its much-improved fork [**krinik**](https://github.com/MikalaiKryvusha/crosspoint-reader), which draws
+> particular to its much-improved fork [**KCCP**](https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint), which draws
 > the calibration screens, reads the curves and shows pictures in gray through them. Other readers and firmwares may
 > work; they are not tested.
 
@@ -83,7 +90,7 @@ pictures and from 9.1 to 1.1–2.7 for books after two iterations — about the 
 If the marks are not found automatically, you click them by hand; night mode, glare, tilt and overexposure are told
 apart and explained. The page speaks English and Russian (more languages are coming).
 
-Requires the CrossPoint **krinik** firmware with screen calibration (Xteink X4 / X4 Pro). The curve is a plain text file
+Requires the **KCCP** firmware (formerly *krinik*) with screen calibration (Xteink X4 / X4 Pro). The curve is a plain text file
 of 256 numbers, so other firmwares can adopt it.
 
 ### KEINKT Image Editor
@@ -125,6 +132,13 @@ MIT — see [LICENSE](LICENSE).
 
 [Read in English →](#english)
 
+> [!TIP]
+> **Проект-побратим — [KCCP · Krinik Custom CrossPoint](https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint)**,
+> своя прошивка CrossPoint Reader для Xteink X4 Pro (прежнее имя — *krinik*). Два проекта работают как одно целое: KCCP
+> рисует калибровочные карточки, читает кривые, которые делает KEINKT, и показывает через них картинки и заставки сна.
+> **[Релизы прошивки KCCP →](https://github.com/MikalaiKryvusha/crosspoint-reader/releases)**
+
+
 **KEINKT** — набор небольших инструментов для тех, кто читает с e-ink. Каждый инструмент — один HTML-файл: скачайте его
 из [релизов](../../releases), откройте двойным щелчком, и он работает в браузере — без установки, учётной записи и
 сервера. Код — обычные JavaScript-модули, встроенные в страницу (`<script type="module">`); библиотека, если инструменту
@@ -133,7 +147,7 @@ MIT — see [LICENSE](LICENSE).
 
 > **Сделано под Xteink X4 Pro и CrossPoint.** Инструменты разрабатываются и тестируются на **Xteink X4 Pro** и тесно
 > завязаны на прошивку [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) — в частности на её
-> сильно улучшенный форк [**krinik**](https://github.com/MikalaiKryvusha/crosspoint-reader): он рисует калибровочные
+> сильно улучшенный форк [**KCCP**](https://github.com/MikalaiKryvusha/Krinik-Custom-CrossPoint): он рисует калибровочные
 > экраны, читает кривые и показывает картинки в сером через них. Другие читалки и прошивки могут работать, но не
 > тестируются.
 
@@ -184,7 +198,7 @@ MIT — see [LICENSE](LICENSE).
 Если метки не нашлись сами, их можно указать вручную; ночной режим, блик, наклон и пересвет распознаются и объясняются.
 Страница говорит по-английски и по-русски (другие языки — следом).
 
-Нужна прошивка CrossPoint **krinik** с калибровкой экрана (Xteink X4 / X4 Pro). Кривая — обычный текстовый файл из 256
+Нужна прошивка **KCCP** (прежде *krinik*) с калибровкой экрана (Xteink X4 / X4 Pro). Кривая — обычный текстовый файл из 256
 чисел, другие прошивки могут её подхватить.
 
 ### KEINKT Image Editor
